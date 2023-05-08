@@ -3,6 +3,7 @@ from model import connect_to_db, db
 
 import crud
 app = Flask(__name__)
+app.app_context().push()
 app.secret_key = "dev"
 
 
