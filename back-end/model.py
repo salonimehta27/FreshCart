@@ -1,5 +1,6 @@
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects.postgresql import ARRAY
 
 
 db = SQLAlchemy()
@@ -7,7 +8,7 @@ db = SQLAlchemy()
 class User(db.Model):
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     fname = db.Column(db.String(255))
     lname = db.Column(db.String(255))
     username = db.Column(db.String, nullable=False)
@@ -28,7 +29,7 @@ class User(db.Model):
     
 class CustomerRep(db.Model):
     __tablename__ = 'customer_reps'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -41,7 +42,7 @@ class CustomerRep(db.Model):
 class Customer(db.Model):
     __tablename__ = 'customers'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     address = db.Column(db.String(255), nullable=False)
     phone_number = db.Column(db.String(255), nullable=False)
@@ -61,7 +62,7 @@ class Customer(db.Model):
 class Driver(db.Model):
     __tablename__ = 'drivers'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     name = db.Column(db.String(255), nullable=False)
     car_model = db.Column(db.String(255), nullable=False)
@@ -78,7 +79,7 @@ class Driver(db.Model):
 class Location(db.Model):
     __tablename__ = 'locations'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'))
     driver_id = db.Column(db.Integer, db.ForeignKey('drivers.id'))
     latitude = db.Column(db.Numeric, nullable=False)
@@ -95,24 +96,29 @@ class Location(db.Model):
 class Product(db.Model):
     __tablename__ = "products"
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    aisle = db.Column(db.String)
+    brand = db.Column(db.String)
+    badges = db.Column(db.ARRAY(db.String))
     description = db.Column(db.String)
-    price = db.Column(db.Float, nullable=False)
+    image = db.Column(db.String)
+    images = db.Column(db.ARRAY(db.String))
+    price = db.Column(db.Float)
+    title = db.Column(db.String)
+    product_id = db.Column(db.Integer, unique=True, nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.now())
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
     order_items = db.relationship("OrderItem", back_populates="product")
-
     cart_products = db.relationship("CartProduct", back_populates="product")
 
     def __repr__(self):
-        return f"<Product {self.name}>"
+        return f"<Product {self.product_id}>"
 
 class Order(db.Model):
     __tablename__ = "orders"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="CASCADE"), nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
@@ -126,7 +132,7 @@ class Order(db.Model):
 class OrderItem(db.Model):
     __tablename__ = "order_items"
     
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     order_id = db.Column(db.Integer, db.ForeignKey("orders.id"), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
@@ -144,7 +150,7 @@ class OrderItem(db.Model):
 class Cart(db.Model):
     __tablename__ = 'carts'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -157,7 +163,7 @@ class Cart(db.Model):
 class CartProduct(db.Model):
     __tablename__ = "cart_products"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     cart_id = db.Column(db.Integer, db.ForeignKey("carts.id"), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
@@ -173,7 +179,7 @@ class CartProduct(db.Model):
 class Chat(db.Model):
     __tablename__ = "chats"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     message = db.Column(db.String(500), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -193,7 +199,7 @@ class Chat(db.Model):
 class Query(db.Model):
     __tablename__ = 'queries'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     message = db.Column(db.String(500), nullable=False)
     is_accepted = db.Column(db.Boolean, nullable=False)
     created_at = db.Column(db.TIMESTAMP, nullable=False, server_default=db.func.now())
