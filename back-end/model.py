@@ -1,7 +1,7 @@
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import ARRAY
-
+import re
 
 db = SQLAlchemy()
 
@@ -112,6 +112,30 @@ class Product(db.Model):
     order_items = db.relationship("OrderItem", back_populates="product")
     cart_products = db.relationship("CartProduct", back_populates="product")
 
+    def clean_desc(self, desc):
+    # Remove HTML tags
+        desc = re.sub(r'<[^>]+>', '', desc)
+    # Remove extra white spaces
+        desc = re.sub(r'\s+', ' ', desc)
+    # Remove leading/trailing white spaces
+        desc = desc.strip()
+        return desc
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'aisle': self.aisle,
+            'brand': self.brand,
+            'badges': self.badges,
+            'description': re.sub('<.*?>', '', self.description) if self.description else None,
+            'image': self.image,
+            'images': self.images,
+            'price': self.price,
+            'title': self.title,
+            'product_id': self.product_id,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
+        }
     def __repr__(self):
         return f"<Product {self.product_id}>"
 
