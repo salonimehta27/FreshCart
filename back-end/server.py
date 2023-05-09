@@ -1,5 +1,5 @@
 from flask import (Flask, render_template, request, flash,get_flashed_messages, session, redirect) 
-from model import connect_to_db, db
+from model import connect_to_db, db, User, Customer, CustomerRep, Driver
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, jsonify
 import requests
@@ -33,6 +33,76 @@ def product_details(id):
     product_dict = product.to_dict()
     return jsonify(product_dict)
 
+@app.route("/login", methods = ["POST"])
+def process_login():
+    email = request.form.get("email")
+    password = request.form.get("password")
+
+    user = crud.get_user_by_email(email)
+
+    if user:
+        if user.password == password:
+            session['user_id'] = user.id
+            return jsonify(success = True)
+        else:
+            return jsonify(success=False, error="Incorrect password"), 401
+    else:
+        return jsonify(success=False, error="User not found"), 401
+
+@app.route("/logout")
+def process_logout():
+    session.pop('user_id', None)
+    return jsonify(success=True)
+
+@app.route("/signup", methods=["POST"])
+def signup_route():
+    # Get the form data
+    fname = request.form.get("fname")
+    lname = request.form.get("lname")
+    username = request.form.get("username")
+    email = request.form.get("email")
+    password = request.form.get("password")
+    role = request.form.get("role")
+    # Call the signup helper function
+    result = crud.signup(
+        fname,
+        lname,
+        username,
+        email,
+        password,
+        role
+    )
+    if "error" in result:
+        return jsonify({"error":result["error"]})
+    else:
+        user_id = result["id"]
+        if role == "customer":
+            crud.create_cart(user_id)
+        return jsonify({"success": True})
+
+    
+@app.route('/update_customer_info', methods=['POST'])
+def update_customer_info():
+    user_id = request.form.get("user_id")
+    address = request.form.get("address")
+    phone_number = request.form.get("phone_number")
+
+    result = crud.update_customer_info(user_id, address=address, phone_number=phone_number)
+
+    return jsonify(result)
+
+
+# Route for updating driver info
+@app.route('/update_driver_info', methods=['POST'])
+def update_driver_info():
+    user_id = request.form.get("user_id")
+    name = request.form.get("name")
+    car_model = request.form.get("car_model")
+    license_plate = request.form.get("license_plate")
+
+    result = crud.update_driver_info(user_id, name=name, car_model=car_model, license_plate=license_plate)
+
+    return jsonify(result)
 
 if __name__ == "__main__":
     connect_to_db(app)

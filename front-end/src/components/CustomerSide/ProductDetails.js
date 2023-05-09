@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
-// import { useParams } from "react-router-dom";
 
 function ProductDetails() {
 	const [product, setProduct] = useState({});
-	// const { id } = useParams();
 	const id = window.location.pathname.split("/")[2];
 	useEffect(() => {
 		fetch(`http://localhost:5000/products/${id}`)

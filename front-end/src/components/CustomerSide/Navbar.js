@@ -2,28 +2,24 @@ import React from "react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
-function Navbar() {
+function Navbar({ handleSearch }) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [categoryFilter, setCategoryFilter] = useState("all");
 
 	const handleSearchChange = (event) => {
 		setSearchQuery(event.target.value);
+		handleSearch(event.target.value, categoryFilter);
 	};
 
 	const handleCategoryFilterChange = (event) => {
 		setCategoryFilter(event.target.value);
-	};
-
-	const handleSubmit = (event) => {
-		event.preventDefault();
-		console.log("Search query:", searchQuery);
-		console.log("Category filter:", categoryFilter);
+		handleSearch(searchQuery, event.target.value);
 	};
 
 	return (
 		<nav>
 			<Link to="/">Home</Link>
-			<form onSubmit={handleSubmit}>
+			<form>
 				<label>
 					Search:
 					<input
@@ -41,10 +37,12 @@ function Navbar() {
 						<option value="category3">category3</option>
 					</select>
 				</label>
-				<button type="submit">Submit</button>
 			</form>
-			{/* <Link to="/cart">Cart</Link> */}
+			<Link to="/cart">Cart</Link>
+			<br></br>
+			<Link to="/login">Login/Signup</Link>
 		</nav>
 	);
 }
+
 export default Navbar;

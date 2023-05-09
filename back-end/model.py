@@ -44,8 +44,8 @@ class Customer(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    address = db.Column(db.String(255), nullable=False)
-    phone_number = db.Column(db.String(255), nullable=False)
+    address = db.Column(db.String(255), nullable=True)
+    phone_number = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now(), onupdate=db.func.now())
 
@@ -64,7 +64,6 @@ class Driver(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    name = db.Column(db.String(255), nullable=False)
     car_model = db.Column(db.String(255), nullable=False)
     license_plate = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
