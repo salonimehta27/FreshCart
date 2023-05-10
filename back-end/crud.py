@@ -1,4 +1,6 @@
-from model import db, User,Product,CustomerRep,Customer, Driver,Cart, connect_to_db
+from model import db, User,Product,CustomerRep,Customer, Driver,Cart,CartProduct, connect_to_db
+from flask import session
+
 
 def create_user(fname, lname, username, email, password, role):
     user = User(
@@ -38,36 +40,79 @@ def create_driver(user,car_model, license_plate):
     db.session.add(driver)
     return driver
 
-
-def signup(fname, lname, username, email, password, role, address=None, phone_number=None,car_model=None, license_plate=None):
-    # Create a new user
-    user = create_user(fname, lname, username, email, password, role)
-
-    # Check the role and create the appropriate model instance
-    if role == "customer":
-        customer = create_customer(user, address, phone_number)
-    elif role == "customer_rep":
-        customer_rep = create_customer_rep(user)
-    elif role == "driver":
-        driver = create_driver(user, car_model, license_plate)
-    else:
-        # Invalid role
-        return {"error": "Invalid role"}
-
-    # Commit the changes to the database
+def create_cart_product(cart_id, product_id, quantity):
+    cart_product = CartProduct(cart_id=cart_id, product_id=product_id, quantity=quantity)
+    db.session.add(cart_product)
     db.session.commit()
 
-    return {"success": True}
+def create_cart():
+    cart = Cart()
+    db.session.add(cart)
+    db.session.commit()
+    return cart
+
+def get_cart_by_id(cart_id):
+    return Cart.query.filter_by(id=cart_id).first()
+
+def merge_carts(guest_cart, user_cart):
+    for guest_cart_product in guest_cart.cart_products:
+        matching_user_cart_product = next((cp for cp in user_cart.cart_products if cp.product_id == guest_cart_product.product_id), None)
+        if matching_user_cart_product is not None:
+            matching_user_cart_product.quantity += guest_cart_product.quantity
+        else:
+            create_cart_product(user_cart.id, guest_cart_product.product_id, guest_cart_product.quantity)
+    db.session.delete(guest_cart)
+    db.session.commit()
+
+def add_product_to_cart(product_id, quantity):
+    if 'user_id' in session:
+        user_cart = Cart.query.filter_by(customer_id=session['user_id']).first()
+        if user_cart is None:
+            user_cart = create_cart()
+            user_cart.customer_id = session['user_id']
+            db.session.commit()
+        create_cart_product(user_cart.id, product_id, quantity)
+    else:
+        if 'guest_cart_id' not in session:
+            guest_cart = create_cart()
+            session['guest_cart_id'] = guest_cart.id
+        else:
+            guest_cart = get_cart_by_id(session['guest_cart_id'])
+        create_cart_product(guest_cart.id, product_id, quantity)
+
+def merge_guest_cart():
+    if 'user_id' in session and 'guest_cart_id' in session:
+        user_cart = Cart.query.filter_by(customer_id=session['user_id']).first()
+        if user_cart is None:
+            user_cart = create_cart()
+            user_cart.customer_id = session['user_id']
+            db.session.commit()
+        guest_cart = get_cart_by_id(session['guest_cart_id'])
+        merge_carts(guest_cart, user_cart)
+        del session['guest_cart_id']
+
+def signup(fname, lname, username, email, password, role, address=None, phone_number=None,car_model=None, license_plate=None):
+    user = create_user(fname, lname, username, email, password, role)
+    print(fname)
+    if role == "customer":
+        returnVal = create_customer(user, address, phone_number)
+    elif role == "customer_rep":
+        returnVal = create_customer_rep(user)
+    elif role == "driver":
+        returnVal = create_driver(user, car_model, license_plate)
+    else:
+        return {"error": "Invalid role"}
+    db.session.commit()
+
+    return {"user":returnVal}
 
 def update_customer_info(user_id, address=None, phone_number=None):
     customer = Customer.query.filter_by(user_id=user_id).first()
 
     if customer is None:
         return {"error": "Customer not found"}
-
     if address is not None:
         customer.address = address
-
     if phone_number is not None:
         customer.phone_number = phone_number
 
@@ -76,18 +121,13 @@ def update_customer_info(user_id, address=None, phone_number=None):
     return {"success": True}
 
 
-def update_driver_info(user_id, name=None, car_model=None, license_plate=None):
+def update_driver_info(user_id,car_model=None, license_plate=None):
     driver = Driver.query.filter_by(user_id=user_id).first()
 
     if driver is None:
         return {"error": "Driver not found"}
-
-    if name is not None:
-        driver.name = name
-
     if car_model is not None:
         driver.car_model = car_model
-
     if license_plate is not None:
         driver.license_plate = license_plate
 

@@ -1,10 +1,17 @@
 import React from "react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { productFiltered } from "./productsSlice";
 
-function Navbar({ handleSearch }) {
+function Navbar() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [categoryFilter, setCategoryFilter] = useState("all");
+	const dispatch = useDispatch();
+
+	const handleSearch = (searchQuery, categoryFilter) => {
+		dispatch(productFiltered({ searchQuery, categoryFilter }));
+	};
 
 	const handleSearchChange = (event) => {
 		setSearchQuery(event.target.value);

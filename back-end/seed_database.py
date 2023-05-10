@@ -21,7 +21,7 @@ db.create_all()
 os.system("source secrets.sh")
 api_key = os.environ['API_KEY']
 
-api_url = f"https://api.spoonacular.com/food/products/search?query=grocery&number=50&apiKey={api_key}"
+api_url = f"https://api.spoonacular.com/food/products/search?query=grocery&number=100&apiKey={api_key}"
 
 response = requests.get(api_url)
 if response.status_code == 200:

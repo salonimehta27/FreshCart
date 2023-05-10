@@ -57,7 +57,7 @@ class Customer(db.Model):
     queries = db.relationship("Query", back_populates="customer")
 
     def __repr__(self):
-        return f'<Customer id={self.id} user_id={self.user_id} name={self.user.name} address={self.address}>'
+        return f'<Customer id={self.id} user_id={self.user_id}>'
 
 class Driver(db.Model):
     __tablename__ = 'drivers'

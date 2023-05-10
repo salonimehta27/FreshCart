@@ -9,6 +9,8 @@ import crud
 app = Flask(__name__)
 app.app_context().push()
 app.secret_key = "dev"
+
+
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 os.system("source secrets.sh")
@@ -40,9 +42,10 @@ def process_login():
 
     user = crud.get_user_by_email(email)
 
-    if user:
+    if user is not None:
         if user.password == password:
             session['user_id'] = user.id
+            crud.merge_guest_cart() # Merge the guest cart with the user's cart, if applicable
             return jsonify(success = True)
         else:
             return jsonify(success=False, error="Incorrect password"), 401
@@ -57,12 +60,13 @@ def process_logout():
 @app.route("/signup", methods=["POST"])
 def signup_route():
     # Get the form data
-    fname = request.form.get("fname")
-    lname = request.form.get("lname")
-    username = request.form.get("username")
-    email = request.form.get("email")
-    password = request.form.get("password")
-    role = request.form.get("role")
+    print(request.json)
+    fname = request.json.get("fname")
+    lname = request.json.get("lname")
+    username = request.json.get("username")
+    email = request.json.get("email")
+    password = request.json.get("password")
+    role = request.json.get("role")
     # Call the signup helper function
     result = crud.signup(
         fname,
@@ -72,15 +76,25 @@ def signup_route():
         password,
         role
     )
+
+    print(result)
     if "error" in result:
         return jsonify({"error":result["error"]})
     else:
-        user_id = result["id"]
+        # import pdb; pdb.set_trace()
+        user_id = result["user"].id
         if role == "customer":
             crud.create_cart(user_id)
         return jsonify({"success": True})
 
-    
+@app.route("/add_to_cart", methods=["POST"])
+def add_to_cart():
+    product_id = request.form.get("product_id")
+    quantity = request.form.get("quantity")
+
+    crud.add_product_to_cart(product_id, quantity)
+    return jsonify(success=True)
+
 @app.route('/update_customer_info', methods=['POST'])
 def update_customer_info():
     user_id = request.form.get("user_id")
@@ -96,11 +110,10 @@ def update_customer_info():
 @app.route('/update_driver_info', methods=['POST'])
 def update_driver_info():
     user_id = request.form.get("user_id")
-    name = request.form.get("name")
     car_model = request.form.get("car_model")
     license_plate = request.form.get("license_plate")
 
-    result = crud.update_driver_info(user_id, name=name, car_model=car_model, license_plate=license_plate)
+    result = crud.update_driver_info(user_id, car_model=car_model, license_plate=license_plate)
 
     return jsonify(result)
 

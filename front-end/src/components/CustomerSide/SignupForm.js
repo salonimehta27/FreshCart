@@ -18,7 +18,16 @@ function SignupForm() {
 	const handleSubmit = (event) => {
 		event.preventDefault();
 		console.log(formData);
-		// code to submit form data to server or state management
+		fetch("http://localhost:5000/signup", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(formData),
+		})
+			.then((response) => response.json())
+			.then((data) => console.log(data))
+			.catch((error) => console.error(error));
 	};
 
 	return (
