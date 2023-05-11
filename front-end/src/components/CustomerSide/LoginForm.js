@@ -1,14 +1,33 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { currentUserAdded } from "./loginSlice";
 function LoginForm() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
-
+	const currentUser = useSelector((state) => state.currentUser.entities);
+	const dispatch = useDispatch();
+	const navigate = useNavigate();
 	const handleSubmit = (event) => {
 		event.preventDefault();
-		// TODO: Add login logic here
-	};
 
+		fetch("http://localhost:5000/login", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ email, password }),
+			credentials: "include",
+		})
+			.then((res) => res.json())
+			.then((data) => {
+				dispatch(currentUserAdded(data));
+				setEmail("");
+				setPassword("");
+			});
+		navigate("/");
+	};
+	// console.log(currentUser);
 	return (
 		<div>
 			<form onSubmit={handleSubmit}>

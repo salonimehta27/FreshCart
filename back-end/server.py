@@ -1,56 +1,76 @@
-from flask import (Flask, render_template, request, flash,get_flashed_messages, session, redirect) 
+from flask import (Flask, render_template, make_response,request, flash,get_flashed_messages, session, redirect) 
 from model import connect_to_db, db, User, Customer, CustomerRep, Driver
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, jsonify
-import requests
-from flask_cors import CORS
+# from flask_session import Session
+# from datetime import timedelta
+from flask_cors import CORS, cross_origin
 import os
 import crud
 app = Flask(__name__)
 app.app_context().push()
 app.secret_key = "dev"
 
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'
 
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
-
+CORS(app,supports_credentials=True)
 os.system("source secrets.sh")
 api_key = os.environ['API_KEY']
 
+@app.route("/login", methods = ["POST"])
+def process_login():
+    email = request.json.get("email")
+    password = request.json.get("password")
+
+    user = crud.get_user_by_email(email)
+ 
+    if user is not None:
+        if user.password == password:
+            session['user_id'] = user.customer.id
+            print("process login", session["user_id"])
+            crud.merge_guest_cart() # Merge the guest cart with the user's cart, if applicable
+            return jsonify({"id":user.customer.id, "fname":user.fname,"lname":user.lname,"username":user.username,"email":user.email,})
+        else:
+            return jsonify(success=False, error="Incorrect password"), 401
+    else:
+        return jsonify(success=False, error="User not found"), 401
+
+
+@app.route("/me")
+@cross_origin(supports_credentials=True)
+def currentUser():
+    if "user_id" in session:
+        print("me",session["user_id"])
+        user = crud.get_customer_by_id(session["user_id"]).user
+        if user is not None:
+           return jsonify({"id":user.id, "fname":user.fname,"lname":user.lname,"username":user.username,"email":user.email,"customer_id":session["user_id"]})
+    return jsonify({"error": "User not in session"})
 
 @app.route("/")
 def homepage():
     flash("Hello")
     return render_template('homepage.html', flash_message=get_flashed_messages())
-
-
+   
 @app.route("/products")
+@cross_origin(supports_credentials=True)
 def get_products():
     products = crud.get_all_products()
+    # print(session)
     products_dict = [product.to_dict() for product in products]
     return jsonify(products_dict)
 
 @app.route("/products/<id>")
+@cross_origin(supports_credentials=True)
 def product_details(id):
     product = crud.get_product_details(id)
     product_dict = product.to_dict()
     return jsonify(product_dict)
 
-@app.route("/login", methods = ["POST"])
-def process_login():
-    email = request.form.get("email")
-    password = request.form.get("password")
 
-    user = crud.get_user_by_email(email)
+    
 
-    if user is not None:
-        if user.password == password:
-            session['user_id'] = user.id
-            crud.merge_guest_cart() # Merge the guest cart with the user's cart, if applicable
-            return jsonify(success = True)
-        else:
-            return jsonify(success=False, error="Incorrect password"), 401
-    else:
-        return jsonify(success=False, error="User not found"), 401
 
 @app.route("/logout")
 def process_logout():
@@ -76,8 +96,6 @@ def signup_route():
         password,
         role
     )
-
-    print(result)
     if "error" in result:
         return jsonify({"error":result["error"]})
     else:

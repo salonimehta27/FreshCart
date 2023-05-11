@@ -11,7 +11,7 @@ function ProductDetails() {
 			})
 			.catch((error) => console.error(error));
 	}, [id]);
-	console.log(product);
+	// console.log(product);
 	return (
 		<div>
 			<h2>{product.title}</h2>
@@ -20,7 +20,7 @@ function ProductDetails() {
 			{product &&
 				product.images &&
 				product.images.map((image) => (
-					<img src={image} alt="product image"></img>
+					<img key={image} src={image} alt="product image"></img>
 				))}
 		</div>
 	);

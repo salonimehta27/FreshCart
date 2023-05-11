@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function SignupForm() {
 	const [formData, setFormData] = useState({
@@ -9,7 +10,7 @@ function SignupForm() {
 		password: "",
 		role: "customer",
 	});
-
+	const navigate = useNavigate();
 	const handleChange = (event) => {
 		const { name, value } = event.target;
 		setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
@@ -17,7 +18,6 @@ function SignupForm() {
 
 	const handleSubmit = (event) => {
 		event.preventDefault();
-		console.log(formData);
 		fetch("http://localhost:5000/signup", {
 			method: "POST",
 			headers: {
@@ -26,7 +26,17 @@ function SignupForm() {
 			body: JSON.stringify(formData),
 		})
 			.then((response) => response.json())
-			.then((data) => console.log(data))
+			.then((data) => {
+				setFormData({
+					fname: "",
+					lname: "",
+					username: "",
+					email: "",
+					password: "",
+					role: "customer",
+				});
+				navigate("/login");
+			})
 			.catch((error) => console.error(error));
 	};
 

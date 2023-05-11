@@ -18,6 +18,15 @@ function Product() {
 			.catch((error) => console.error(error));
 	}, []);
 
+	const handleCart = () => {
+		fetch("http:localhost:5000/add_to_cart", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({}),
+		});
+	};
 	if (!products || !Array.isArray(products)) {
 		return <p>No products found</p>;
 	}
@@ -32,6 +41,7 @@ function Product() {
 					</h3>
 					<p>Price: {product.price}</p>
 					<img src={product.image} alt={product.title} />
+					<button onClick={handleCart}>Add to Cart</button>
 				</div>
 			))}
 		</div>

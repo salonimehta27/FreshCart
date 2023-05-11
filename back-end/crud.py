@@ -1,5 +1,5 @@
 from model import db, User,Product,CustomerRep,Customer, Driver,Cart,CartProduct, connect_to_db
-from flask import session
+from server import session
 
 
 def create_user(fname, lname, username, email, password, role):
@@ -45,8 +45,10 @@ def create_cart_product(cart_id, product_id, quantity):
     db.session.add(cart_product)
     db.session.commit()
 
-def create_cart():
+def create_cart(customer_id=None):
     cart = Cart()
+    if customer_id is not None:
+        cart.customer_id = customer_id
     db.session.add(cart)
     db.session.commit()
     return cart
@@ -68,8 +70,7 @@ def add_product_to_cart(product_id, quantity):
     if 'user_id' in session:
         user_cart = Cart.query.filter_by(customer_id=session['user_id']).first()
         if user_cart is None:
-            user_cart = create_cart()
-            user_cart.customer_id = session['user_id']
+            user_cart = create_cart(customer_id=session['user_id'])
             db.session.commit()
         create_cart_product(user_cart.id, product_id, quantity)
     else:
@@ -84,8 +85,7 @@ def merge_guest_cart():
     if 'user_id' in session and 'guest_cart_id' in session:
         user_cart = Cart.query.filter_by(customer_id=session['user_id']).first()
         if user_cart is None:
-            user_cart = create_cart()
-            user_cart.customer_id = session['user_id']
+            user_cart = create_cart(customer_id=session['user_id'])
             db.session.commit()
         guest_cart = get_cart_by_id(session['guest_cart_id'])
         merge_carts(guest_cart, user_cart)
@@ -93,7 +93,6 @@ def merge_guest_cart():
 
 def signup(fname, lname, username, email, password, role, address=None, phone_number=None,car_model=None, license_plate=None):
     user = create_user(fname, lname, username, email, password, role)
-    print(fname)
     if role == "customer":
         returnVal = create_customer(user, address, phone_number)
     elif role == "customer_rep":
@@ -154,6 +153,10 @@ def get_product_details(id):
 def get_user_by_email(email):
     return User.query.filter(User.email == email).first()
 
+def get_customer_by_id(id):
+    customer = Customer.query.get(id)
+    if customer is not None:
+        return customer
 
 if __name__ == '__main__':
     from server import app 

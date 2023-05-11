@@ -1,16 +1,26 @@
 import React from "react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { productFiltered } from "./productsSlice";
+import { currentUserAdded, currentUserRemoved } from "./loginSlice";
 
-function Navbar() {
+function Navbar({ currentUser }) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [categoryFilter, setCategoryFilter] = useState("all");
 	const dispatch = useDispatch();
-
+	const navigate = useNavigate();
 	const handleSearch = (searchQuery, categoryFilter) => {
 		dispatch(productFiltered({ searchQuery, categoryFilter }));
+	};
+
+	const handleLogout = () => {
+		fetch("http://localhost:5000/logout", { credentials: "include" })
+			.then((r) => r.json())
+			.then(() => {
+				dispatch(currentUserRemoved());
+			});
+		navigate("/");
 	};
 
 	const handleSearchChange = (event) => {
@@ -47,7 +57,13 @@ function Navbar() {
 			</form>
 			<Link to="/cart">Cart</Link>
 			<br></br>
-			<Link to="/login">Login/Signup</Link>
+			{currentUser && !currentUser.error ? (
+				<a href="/" onClick={handleLogout}>
+					Logout
+				</a>
+			) : (
+				<Link to="/login">Login/Signup</Link>
+			)}
 		</nav>
 	);
 }
