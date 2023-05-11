@@ -7,7 +7,7 @@ const cartsSlice = createSlice({
 	},
 	reducers: {
 		cartItemsAdded(state, action) {
-			state.items.push(action.payload);
+			state.items = action.payload;
 		},
 		cartItemsRemoved(state, action) {
 			const index = state.items.findIndex((item) => item.id === action.payload);

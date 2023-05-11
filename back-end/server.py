@@ -2,8 +2,6 @@ from flask import (Flask, render_template, make_response,request, flash,get_flas
 from model import connect_to_db, db, User, Customer, CustomerRep, Driver
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, jsonify
-# from flask_session import Session
-# from datetime import timedelta
 from flask_cors import CORS, cross_origin
 import os
 import crud
@@ -19,6 +17,12 @@ CORS(app,supports_credentials=True)
 os.system("source secrets.sh")
 api_key = os.environ['API_KEY']
 
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+######### LOGIN/SIGNUP/LOGOUT ###########
+
 @app.route("/login", methods = ["POST"])
 def process_login():
     email = request.json.get("email")
@@ -31,7 +35,11 @@ def process_login():
             session['user_id'] = user.customer.id
             print("process login", session["user_id"])
             crud.merge_guest_cart() # Merge the guest cart with the user's cart, if applicable
-            return jsonify({"id":user.customer.id, "fname":user.fname,"lname":user.lname,"username":user.username,"email":user.email,})
+            return jsonify({"id":user.customer.id, 
+                            "fname":user.fname,
+                            "lname":user.lname,
+                            "username":user.username,
+                            "email":user.email,})
         else:
             return jsonify(success=False, error="Incorrect password"), 401
     else:
@@ -45,37 +53,13 @@ def currentUser():
         print("me",session["user_id"])
         user = crud.get_customer_by_id(session["user_id"]).user
         if user is not None:
-           return jsonify({"id":user.id, "fname":user.fname,"lname":user.lname,"username":user.username,"email":user.email,"customer_id":session["user_id"]})
+           return jsonify({"id":user.id, "fname":user.fname,
+                           "lname":user.lname,
+                           "username":user.username,
+                           "email":user.email,
+                           "customer_id":session["user_id"]})
     return jsonify({"error": "User not in session"})
 
-@app.route("/")
-def homepage():
-    flash("Hello")
-    return render_template('homepage.html', flash_message=get_flashed_messages())
-   
-@app.route("/products")
-@cross_origin(supports_credentials=True)
-def get_products():
-    products = crud.get_all_products()
-    # print(session)
-    products_dict = [product.to_dict() for product in products]
-    return jsonify(products_dict)
-
-@app.route("/products/<id>")
-@cross_origin(supports_credentials=True)
-def product_details(id):
-    product = crud.get_product_details(id)
-    product_dict = product.to_dict()
-    return jsonify(product_dict)
-
-
-    
-
-
-@app.route("/logout")
-def process_logout():
-    session.pop('user_id', None)
-    return jsonify(success=True)
 
 @app.route("/signup", methods=["POST"])
 def signup_route():
@@ -99,19 +83,64 @@ def signup_route():
     if "error" in result:
         return jsonify({"error":result["error"]})
     else:
-        # import pdb; pdb.set_trace()
         user_id = result["user"].id
         if role == "customer":
             crud.create_cart(user_id)
         return jsonify({"success": True})
 
+@app.route("/logout")
+def process_logout():
+    session.pop('user_id', None)
+    return jsonify(success=True)
+
+######### PRODUCTS ###########
+@app.route("/products")
+@cross_origin(supports_credentials=True)
+def get_products():
+    products = crud.get_all_products()
+    products_dict = [product.to_dict() for product in products]
+    return jsonify(products_dict)
+
+@app.route("/products/<id>")
+@cross_origin(supports_credentials=True)
+def product_details(id):
+    product = crud.get_product_details(id)
+    product_dict = product.to_dict()
+    return jsonify(product_dict)
+
+######### CART ###########
+
 @app.route("/add_to_cart", methods=["POST"])
 def add_to_cart():
-    product_id = request.form.get("product_id")
-    quantity = request.form.get("quantity")
-
+    product_id = request.json.get("product_id")
+    quantity = request.json.get("quantity")
     crud.add_product_to_cart(product_id, quantity)
-    return jsonify(success=True)
+    cart = crud.get_cur_cart()
+    return jsonify(cart)
+
+
+@app.route('/myCart')
+def get_cart():
+    print(session)
+    if "user_id" in session:
+        user_id = session["user_id"]
+        cart = crud.get_cart_by_customer_id(user_id)
+        if cart is not None:
+            cart_dict = cart.to_dict()
+            products = crud.get_products_in_cart(cart.id)
+            product_dicts = [product.to_dict() for product in products]
+            cart_dict['products'] = product_dicts
+            return jsonify(cart_dict)
+    elif "guest_cart_id" in session:
+        guest_cart_id = session["guest_cart_id"]
+        guest_cart = crud.get_cart_by_id(guest_cart_id)
+        if guest_cart is not None:
+            cart_dict = guest_cart.to_dict()
+            products = crud.get_products_in_cart(guest_cart.id)
+            product_dicts = [product.to_dict() for product in products]
+            cart_dict['products'] = product_dicts
+            return jsonify(cart_dict)
+    return jsonify({"error": "Empty Cart"})
 
 @app.route('/update_customer_info', methods=['POST'])
 def update_customer_info():

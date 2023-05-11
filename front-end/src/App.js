@@ -9,10 +9,16 @@ import LoginForm from "./components/CustomerSide/LoginForm";
 import AdminDashboard from "./components/AdminDashboard/AdminDashboard";
 import { useDispatch, useSelector } from "react-redux";
 import { currentUserAdded } from "./components/CustomerSide/loginSlice";
+import {
+	cartItemsAdded,
+	cartItemsCleared,
+} from "./components/CustomerSide/cartsSlice";
 
 function App() {
 	const dispatch = useDispatch();
 	const currentUser = useSelector((state) => state.currentUser.entities);
+	const cartss = useSelector((state) => state.carts.items);
+	// console.log(cartss);
 	useEffect(() => {
 		fetch("http://localhost:5000/me", {
 			credentials: "include",
@@ -21,7 +27,17 @@ function App() {
 			.then((user) => {
 				dispatch(currentUserAdded(user));
 			});
+
+		fetch("http://localhost:5000/myCart", {
+			credentials: "include",
+		})
+			.then((res) => res.json())
+			.then((data) => {
+				console.log(data);
+				dispatch(cartItemsAdded(data));
+			});
 	}, []);
+
 	return (
 		<Router>
 			<div className="App">

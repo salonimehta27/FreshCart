@@ -174,12 +174,21 @@ class Cart(db.Model):
     __tablename__ = 'carts'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'))
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     cart_products = db.relationship("CartProduct", back_populates="cart")
     customer = db.relationship("Customer", back_populates="cart")
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'customer_id': self.customer_id,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat(),
+            'cart_products': [cp.to_dict() for cp in self.cart_products],
+        }
     def __repr__(self):
         return f"<Cart {self.id}>"
 
@@ -196,6 +205,15 @@ class CartProduct(db.Model):
     cart = db.relationship("Cart", back_populates="cart_products")
     product = db.relationship("Product", back_populates="cart_products")
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'cart_id': self.cart_id,
+            'product_id': self.product_id,
+            'quantity': self.quantity,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat(),
+        }
     def __repr__(self):
         return f"<CartProduct cart_id={self.cart_id} product_id={self.product_id} quantity={self.quantity}>"
 

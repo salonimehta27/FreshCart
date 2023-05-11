@@ -45,6 +45,7 @@ def create_cart_product(cart_id, product_id, quantity):
     db.session.add(cart_product)
     db.session.commit()
 
+
 def create_cart(customer_id=None):
     cart = Cart()
     if customer_id is not None:
@@ -52,6 +53,8 @@ def create_cart(customer_id=None):
     db.session.add(cart)
     db.session.commit()
     return cart
+
+
 
 def get_cart_by_id(cart_id):
     return Cart.query.filter_by(id=cart_id).first()
@@ -72,14 +75,48 @@ def add_product_to_cart(product_id, quantity):
         if user_cart is None:
             user_cart = create_cart(customer_id=session['user_id'])
             db.session.commit()
-        create_cart_product(user_cart.id, product_id, quantity)
+
+        cart_product = CartProduct.query.filter_by(cart_id=user_cart.id, product_id=product_id).first()
+        if cart_product is None:
+            create_cart_product(user_cart.id, product_id, quantity)
+        else:
+            cart_product.quantity += quantity
+            db.session.commit()
     else:
         if 'guest_cart_id' not in session:
-            guest_cart = create_cart()
+            print("session", session)
+            guest_cart = Cart()
+            db.session.add(guest_cart)
+            db.session.commit()
             session['guest_cart_id'] = guest_cart.id
+            # import pdb; pdb.set_trace()
         else:
             guest_cart = get_cart_by_id(session['guest_cart_id'])
-        create_cart_product(guest_cart.id, product_id, quantity)
+
+        cart_product = CartProduct.query.filter_by(cart_id=guest_cart.id, product_id=product_id).first()
+        if cart_product is None:
+            create_cart_product(guest_cart.id, product_id, quantity)
+        else:
+            cart_product.quantity += quantity
+            db.session.commit()
+
+def get_cur_cart():
+    if 'user_id' in session:
+        user_cart = Cart.query.filter_by(customer_id=session['user_id']).first()
+        if user_cart is None:
+            user_cart = create_cart(customer_id=session['user_id'])
+            db.session.commit()
+    elif 'guest_cart_id' in session:
+        user_cart = get_cart_by_id(session['guest_cart_id'])
+    else:
+        return {'error': 'No cart found'}
+
+    cart_dict = user_cart.to_dict()
+    products = get_products_in_cart(user_cart.id)
+    product_dicts = [product.to_dict() for product in products]
+    cart_dict['products'] = product_dicts
+
+    return cart_dict
 
 def merge_guest_cart():
     if 'user_id' in session and 'guest_cart_id' in session:
@@ -90,6 +127,26 @@ def merge_guest_cart():
         guest_cart = get_cart_by_id(session['guest_cart_id'])
         merge_carts(guest_cart, user_cart)
         del session['guest_cart_id']
+
+def get_cart_by_customer_id(user_id):
+    return Cart.query.filter_by(customer_id=user_id).first()
+
+def get_products_in_cart(cart_id):
+    cart_products = CartProduct.query.filter_by(cart_id=cart_id).all()
+    products = []
+    for cart_product in cart_products:
+        product = Product.query.get(cart_product.product_id)
+        if product is not None:
+            products.append(product)
+    
+    # Check if the user has a cart and get the products in that cart
+    if 'user_id' in session:
+        user_cart = Cart.query.filter_by(customer_id=session['user_id']).first()
+        if user_cart is not None and user_cart.id != cart_id:
+            user_products = get_products_in_cart(user_cart.id)
+            products.extend(user_products)
+
+    return products
 
 def signup(fname, lname, username, email, password, role, address=None, phone_number=None,car_model=None, license_plate=None):
     user = create_user(fname, lname, username, email, password, role)
