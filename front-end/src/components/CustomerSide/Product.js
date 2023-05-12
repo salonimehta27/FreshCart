@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { productsReceived } from "./productsSlice";
 import { useSelector, useDispatch } from "react-redux";
 import { cartItemsAdded, cartItemsUpdated } from "./cartsSlice";
+import { Card, Button } from "react-bootstrap";
 
 function Product() {
 	const dispatch = useDispatch();

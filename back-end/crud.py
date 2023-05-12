@@ -1,6 +1,5 @@
 from model import db, User,Product,CustomerRep,Customer, Driver,Cart,CartProduct, connect_to_db
-from server import session
-
+from math import radians, sin, cos, sqrt, atan2
 
 def create_user(fname, lname, username, email, password, role):
     user = User(
@@ -40,142 +39,6 @@ def create_driver(user,car_model, license_plate):
     db.session.add(driver)
     return driver
 
-def create_cart_product(cart_id, product_id, quantity):
-    cart_product = CartProduct(cart_id=cart_id, product_id=product_id, quantity=quantity)
-    db.session.add(cart_product)
-    db.session.commit()
-
-
-def create_cart(customer_id=None):
-    cart = Cart()
-    if customer_id is not None:
-        cart.customer_id = customer_id
-    db.session.add(cart)
-    db.session.commit()
-    return cart
-
-
-
-def get_cart_by_id(cart_id):
-    return Cart.query.filter_by(id=cart_id).first()
-
-def merge_carts(guest_cart, user_cart):
-    for guest_cart_product in guest_cart.cart_products:
-        matching_user_cart_product = next((cp for cp in user_cart.cart_products if cp.product_id == guest_cart_product.product_id), None)
-        if matching_user_cart_product is not None:
-            matching_user_cart_product.quantity += guest_cart_product.quantity
-        else:
-            create_cart_product(user_cart.id, guest_cart_product.product_id, guest_cart_product.quantity)
-    db.session.delete(guest_cart)
-    db.session.commit()
-
-def add_product_to_cart(product_id, quantity):
-    if 'user_id' in session:
-        user_cart = Cart.query.filter_by(customer_id=session['user_id']).first()
-        if user_cart is None:
-            user_cart = create_cart(customer_id=session['user_id'])
-            db.session.commit()
-
-        cart_product = CartProduct.query.filter_by(cart_id=user_cart.id, product_id=product_id).first()
-        if cart_product is None:
-            create_cart_product(user_cart.id, product_id, quantity)
-        else:
-            cart_product.quantity += quantity
-            db.session.commit()
-    else:
-        if 'guest_cart_id' not in session:
-            # print("session", session)
-            guest_cart = Cart()
-            db.session.add(guest_cart)
-            db.session.commit()
-            session['guest_cart_id'] = guest_cart.id
-            # import pdb; pdb.set_trace()
-        else:
-            guest_cart = get_cart_by_id(session['guest_cart_id'])
-
-        cart_product = CartProduct.query.filter_by(cart_id=guest_cart.id, product_id=product_id).first()
-        if cart_product is None:
-            create_cart_product(guest_cart.id, product_id, quantity)
-        else:
-            cart_product.quantity += quantity
-            db.session.commit()
-
-def get_cur_cart():
-    if 'user_id' in session:
-        user_cart = Cart.query.filter_by(customer_id=session['user_id']).first()
-        if user_cart is None:
-            user_cart = create_cart(customer_id=session['user_id'])
-            db.session.commit()
-    elif 'guest_cart_id' in session:
-        user_cart = get_cart_by_id(session['guest_cart_id'])
-    else:
-        return {'error': 'No cart found'}
-
-    cart_dict = user_cart.to_dict()
-    products = get_products_in_cart(user_cart.id)
-    product_dicts = [product.to_dict() for product in products]
-    cart_dict['products'] = product_dicts
-
-    return cart_dict
-
-def merge_guest_cart():
-    if 'user_id' in session and 'guest_cart_id' in session:
-        user_cart = Cart.query.filter_by(customer_id=session['user_id']).first()
-        if user_cart is None:
-            user_cart = create_cart(customer_id=session['user_id'])
-            db.session.commit()
-        guest_cart = get_cart_by_id(session['guest_cart_id'])
-        merge_carts(guest_cart, user_cart)
-        del session['guest_cart_id']
-
-def get_cart_by_customer_id(user_id):
-    return Cart.query.filter_by(customer_id=user_id).first()
-
-def get_products_in_cart(cart_id):
-    cart_products = CartProduct.query.filter_by(cart_id=cart_id).all()
-    products = []
-    for cart_product in cart_products:
-        product = Product.query.get(cart_product.product_id)
-        if product is not None:
-            products.append(product)
-    
-    # Check if the user has a cart and get the products in that cart
-    if 'user_id' in session:
-        user_cart = Cart.query.filter_by(customer_id=session['user_id']).first()
-        if user_cart is not None and user_cart.id != cart_id:
-            user_products = get_products_in_cart(user_cart.id)
-            products.extend(user_products)
-
-    return products
-
-def remove_product_from_cart(user_id, product_id):
-    cart = get_cart_by_customer_id(user_id)
-    if cart is None:
-        return
-    cart_product = CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).first()
-    if cart_product is None:
-        return
-    db.session.delete(cart_product)
-    db.session.commit()
-    # cart_products = CartProduct.query.filter_by(cart_id=cart.id).all()
-
-    # if not cart_products:
-    #     if cart.customer is not None:
-    #         db.session.delete(cart)
-    #         db.session.commit()
-    #     else:
-    #         cart.last_modified = datetime.utcnow()
-    #         db.session.commit()
-
-def update_cart_product_quantity(user_id, product_id, quantity):
-    cart = get_cart_by_customer_id(user_id)
-    if cart is None:
-        return
-    cart_product = CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).first()
-    if cart_product is None:
-        return
-    cart_product.quantity = quantity
-    db.session.commit()
 
 
 def signup(fname, lname, username, email, password, role, address=None, phone_number=None,car_model=None, license_plate=None):
@@ -221,15 +84,25 @@ def update_driver_info(user_id,car_model=None, license_plate=None):
 
     return {"success": True}
 
-def create_cart(user_id):
-    customer = Customer.query.filter_by(user_id=user_id).first()
-    if not customer:
-        return None
-    cart = Cart(customer=customer)
-    db.session.add(cart)
-    db.session.commit()
-    return cart
 
+def calculate_distance(lat1, lon1, lat2, lon2):
+    # approximate radius of earth in km
+    R = 6373.0
+
+    lat1 = radians(lat1)
+    lon1 = radians(lon1)
+    lat2 = radians(lat2)
+    lon2 = radians(lon2)
+
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+
+    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    distance = R * c
+
+    return distance
 
 def get_all_products():
     return Product.query.all()

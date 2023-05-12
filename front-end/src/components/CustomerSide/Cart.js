@@ -7,6 +7,8 @@ import {
 	cartItemsCleared,
 } from "./cartsSlice";
 
+import "bootstrap/dist/css/bootstrap.min.css";
+
 function Cart() {
 	const dispatch = useDispatch();
 	const cartItems = useSelector((state) => state.carts.items);
@@ -47,9 +49,9 @@ function Cart() {
 		}, 0);
 
 	return (
-		<div>
-			<h2>Shopping Cart</h2>
-			<table>
+		<div className="container mt-5">
+			<h2 className="mb-4">Shopping Cart</h2>
+			<table className="table">
 				<thead>
 					<tr>
 						<th>Product</th>
@@ -68,7 +70,20 @@ function Cart() {
 							);
 							return (
 								<tr key={item.id}>
-									<td>{product.title}</td>
+									<td>
+										<div className="d-flex align-items-center">
+											<img
+												src={product.image}
+												alt={product.title}
+												className="mr-3"
+												style={{ maxWidth: "70px" }}
+											/>
+											<div>
+												<h5>{product.title}</h5>
+												<p className="mb-0">${product.price.toFixed(2)}</p>
+											</div>
+										</div>
+									</td>
 									<td>
 										<input
 											type="number"
@@ -82,7 +97,10 @@ function Cart() {
 									<td>${product.price.toFixed(2)}</td>
 									<td>${(product.price * item.quantity).toFixed(2)}</td>
 									<td>
-										<button onClick={() => handleRemoveItem(item.id)}>
+										<button
+											className="btn btn-danger"
+											onClick={() => handleRemoveItem(item.id)}
+										>
 											Remove
 										</button>
 									</td>
@@ -95,7 +113,9 @@ function Cart() {
 						<td colSpan="3">Total:</td>
 						<td>${totalPrice && totalPrice.toFixed(2)}</td>
 						<td>
-							<button onClick={handleClearCart}>Clear cart</button>
+							<button className="btn btn-secondary" onClick={handleClearCart}>
+								Clear cart
+							</button>
 						</td>
 					</tr>
 				</tfoot>
