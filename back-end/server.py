@@ -142,6 +142,42 @@ def get_cart():
             return jsonify(cart_dict)
     return jsonify({"error": "Empty Cart"})
 
+@app.route('/cart/<product_id>', methods=['DELETE'])
+def remove_from_cart(product_id):
+    if "user_id" in session:
+        user_id = session["user_id"]
+        crud.remove_product_from_cart(user_id, product_id)
+        return jsonify(success=True)
+    elif "guest_cart_id" in session:
+        guest_cart_id = session["guest_cart_id"]
+        crud.remove_product_from_cart(guest_cart_id, product_id)
+        return jsonify(success=True)
+    return jsonify(error="Cart not found")
+
+
+@app.route('/cart/<product_id>', methods=['PATCH'])
+def update_cart_quantity(product_id):
+    quantity = request.json.get("quantity")
+    if "user_id" in session:
+        user_id = session["user_id"]
+        crud.update_cart_product_quantity(user_id, product_id, quantity)
+        cart = crud.get_cart_by_customer_id(user_id)
+        cart_dict = cart.to_dict()
+        products = crud.get_products_in_cart(cart.id)
+        product_dicts = [product.to_dict() for product in products]
+        cart_dict['products'] = product_dicts
+        return jsonify(cart_dict)
+    elif "guest_cart_id" in session:
+        guest_cart_id = session["guest_cart_id"]
+        crud.update_cart_product_quantity(guest_cart_id, product_id, quantity)
+        cart = crud.get_cart_by_id(guest_cart_id)
+        cart_dict = cart.to_dict()
+        products = crud.get_products_in_cart(guest_cart_id)
+        product_dicts = [product.to_dict() for product in products]
+        cart_dict['products'] = product_dicts
+        return jsonify(cart_dict)
+    return jsonify(error="Cart not found")
+
 @app.route('/update_customer_info', methods=['POST'])
 def update_customer_info():
     user_id = request.form.get("user_id")

@@ -13,12 +13,11 @@ import {
 	cartItemsAdded,
 	cartItemsCleared,
 } from "./components/CustomerSide/cartsSlice";
-
+import Cart from "./components/CustomerSide/Cart";
 function App() {
 	const dispatch = useDispatch();
 	const currentUser = useSelector((state) => state.currentUser.entities);
-	const cartss = useSelector((state) => state.carts.items);
-	// console.log(cartss);
+	const cartItems = useSelector((state) => state.carts.items);
 	useEffect(() => {
 		fetch("http://localhost:5000/me", {
 			credentials: "include",
@@ -27,17 +26,8 @@ function App() {
 			.then((user) => {
 				dispatch(currentUserAdded(user));
 			});
-
-		fetch("http://localhost:5000/myCart", {
-			credentials: "include",
-		})
-			.then((res) => res.json())
-			.then((data) => {
-				console.log(data);
-				dispatch(cartItemsAdded(data));
-			});
 	}, []);
-
+	// console.log(cartItems);
 	return (
 		<Router>
 			<div className="App">
@@ -49,6 +39,7 @@ function App() {
 					<Route exact path="/signup" element={<SignupForm />} />
 					<Route exact path="/login" element={<LoginForm />} />
 					<Route path="/admin" element={<AdminDashboard />} />
+					<Route exact path="/cart" element={<Cart cart={cartItems} />} />
 				</Routes>
 			</div>
 		</Router>

@@ -84,7 +84,7 @@ def add_product_to_cart(product_id, quantity):
             db.session.commit()
     else:
         if 'guest_cart_id' not in session:
-            print("session", session)
+            # print("session", session)
             guest_cart = Cart()
             db.session.add(guest_cart)
             db.session.commit()
@@ -147,6 +147,36 @@ def get_products_in_cart(cart_id):
             products.extend(user_products)
 
     return products
+
+def remove_product_from_cart(user_id, product_id):
+    cart = get_cart_by_customer_id(user_id)
+    if cart is None:
+        return
+    cart_product = CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).first()
+    if cart_product is None:
+        return
+    db.session.delete(cart_product)
+    db.session.commit()
+    # cart_products = CartProduct.query.filter_by(cart_id=cart.id).all()
+
+    # if not cart_products:
+    #     if cart.customer is not None:
+    #         db.session.delete(cart)
+    #         db.session.commit()
+    #     else:
+    #         cart.last_modified = datetime.utcnow()
+    #         db.session.commit()
+
+def update_cart_product_quantity(user_id, product_id, quantity):
+    cart = get_cart_by_customer_id(user_id)
+    if cart is None:
+        return
+    cart_product = CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).first()
+    if cart_product is None:
+        return
+    cart_product.quantity = quantity
+    db.session.commit()
+
 
 def signup(fname, lname, username, email, password, role, address=None, phone_number=None,car_model=None, license_plate=None):
     user = create_user(fname, lname, username, email, password, role)
