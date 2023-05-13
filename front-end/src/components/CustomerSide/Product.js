@@ -35,7 +35,7 @@ function Product() {
 			.then((data) => {
 				dispatch(cartItemsAdded(data));
 				// dispatch(cartItemsUpdated(data));
-				console.log(data);
+				// console.log(data);
 			});
 	};
 	if (!products || !Array.isArray(products)) {
@@ -75,7 +75,7 @@ function Product() {
 									</Card.Title>
 								</Card.Title>
 								<Card.Text style={{ marginBottom: "1rem" }}>
-									Price: {product.price}
+									Price: $ {product.price.toFixed(2)}
 								</Card.Text>
 								<Button
 									variant="primary"

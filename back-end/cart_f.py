@@ -1,22 +1,11 @@
 from model import db, User,Product,Customer,Cart,CartProduct, connect_to_db
 from server import session
 
-# def create_cart_product(cart_id, product_id, quantity):
-#     cart_product = CartProduct(cart_id=cart_id, product_id=product_id, quantity=quantity)
-#     db.session.add(cart_product)
-#     db.session.commit()
-# def create_cart_product(cart, product_id, quantity):
-#     cart_product = CartProduct(cart=cart, product_id=product_id, quantity=quantity)
-#     db.session.add(cart_product)
-#     db.session.commit()
-
 def create_cart_product(cart_id, product_id, quantity):
-    # import pdb; pdb.set_trace()
     cart_product = CartProduct(cart_id=cart_id, product_id=product_id, quantity=quantity)
     db.session.add(cart_product)
     db.session.commit()
     return cart_product
-
 
 
 def create_cart(customer_id=None):
@@ -93,17 +82,6 @@ def merge_carts(guest_cart, user_cart):
     db.session.delete(guest_cart)
     db.session.commit()
 
-# def merge_carts(guest_cart, user_cart):
-#     for guest_cart_product in guest_cart.cart_products:
-#         matching_user_cart_product = next((cp for cp in user_cart.cart_products if cp.product_id == guest_cart_product.product_id), None)
-#         if matching_user_cart_product is not None:
-#             matching_user_cart_product.quantity += guest_cart_product.quantity
-#         else:
-#             cart_product = CartProduct(cart=user_cart, product=guest_cart_product.product, quantity=guest_cart_product.quantity)
-#             db.session.add(cart_product)
-#     db.session.delete(guest_cart)
-#     db.session.commit()
-
 def merge_guest_cart():
     
     if 'user_id' in session and 'guest_cart_id' in session:
@@ -137,19 +115,21 @@ def get_products_in_cart(cart_id):
 
     return products
 
-def remove_product_from_cart(user_id, product_id):
-    cart = get_cart_by_customer_id(user_id)
+def remove_product_from_cart(cart_id, product_id):
+    cart = get_cart_by_id(cart_id)
     if cart is None:
         return
-    cart_product = CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).first()
+    cart_product = CartProduct.query.filter_by(cart_id=cart.id, product_id=int(product_id)).first()
     if cart_product is None:
         return
+    cart.cart_products.remove(cart_product)
     db.session.delete(cart_product)
     db.session.commit()
     
 
-def update_cart_product_quantity(user_id, product_id, quantity):
-    cart = get_cart_by_customer_id(user_id)
+def update_cart_product_quantity(cart_id, product_id, quantity):
+    cart = get_cart_by_id(cart_id)
+    # import pdb; pdb.set_trace()
     if cart is None:
         return
     cart_product = CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).first()
@@ -157,6 +137,14 @@ def update_cart_product_quantity(user_id, product_id, quantity):
         return
     cart_product.quantity = quantity
     db.session.commit()
+
+def create_cart_response(cart, cart_id):
+    cart_dict = cart.to_dict()
+    products = get_products_in_cart(cart_id)
+    product_dicts = [product.to_dict() for product in products]
+    cart_dict['products'] = product_dicts
+    return cart_dict
+
 
 if __name__ == '__main__':
     from server import app 

@@ -8,14 +8,27 @@ import {
 } from "./cartsSlice";
 
 import { MDBTable, MDBTableHead, MDBTableBody } from "mdbreact";
-
 function Cart() {
 	const dispatch = useDispatch();
 	const cartItems = useSelector((state) => state.carts.items);
 
 	// Update cart item quantity
 	const handleQuantityChange = (id, quantity) => {
-		dispatch(cartItemsUpdated({ id, quantity }));
+		fetch(`http://localhost:5000/cart/${id}`, {
+			method: "PATCH",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			credentials: "include",
+			body: JSON.stringify({
+				quantity: quantity,
+			}),
+		})
+			.then((res) => res.json())
+			.then((data) => {
+				// console.log(data);
+				dispatch(cartItemsUpdated(data));
+			});
 	};
 
 	useEffect(() => {
@@ -32,6 +45,7 @@ function Cart() {
 	const handleRemoveItem = (id) => {
 		fetch(`http://localhost:5000/cart/${id}`, {
 			method: "DELETE",
+			credentials: "include",
 		})
 			.then((r) => r.json())
 			.then(() => dispatch(cartItemsRemoved(id)));
@@ -94,7 +108,7 @@ function Cart() {
 											min="1"
 											value={item.quantity}
 											onChange={(e) =>
-												handleQuantityChange(item.id, e.target.value)
+												handleQuantityChange(item.product_id, e.target.value)
 											}
 										/>
 									</td>
@@ -103,7 +117,7 @@ function Cart() {
 									<td>
 										<button
 											className="btn btn-danger"
-											onClick={() => handleRemoveItem(item.id)}
+											onClick={() => handleRemoveItem(product.id)}
 										>
 											Remove
 										</button>
