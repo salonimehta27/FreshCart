@@ -1,10 +1,23 @@
 from model import db, User,Product,Customer,Cart,CartProduct, connect_to_db
 from server import session
 
+# def create_cart_product(cart_id, product_id, quantity):
+#     cart_product = CartProduct(cart_id=cart_id, product_id=product_id, quantity=quantity)
+#     db.session.add(cart_product)
+#     db.session.commit()
+# def create_cart_product(cart, product_id, quantity):
+#     cart_product = CartProduct(cart=cart, product_id=product_id, quantity=quantity)
+#     db.session.add(cart_product)
+#     db.session.commit()
+
 def create_cart_product(cart_id, product_id, quantity):
+    # import pdb; pdb.set_trace()
     cart_product = CartProduct(cart_id=cart_id, product_id=product_id, quantity=quantity)
     db.session.add(cart_product)
     db.session.commit()
+    return cart_product
+
+
 
 def create_cart(customer_id=None):
     cart = Cart()
@@ -36,10 +49,10 @@ def add_product_to_cart(product_id, quantity):
             db.session.add(guest_cart)
             db.session.commit()
             session['guest_cart_id'] = guest_cart.id
-            # import pdb; pdb.set_trace()
+           
         else:
             guest_cart = get_cart_by_id(session['guest_cart_id'])
-
+        # import pdb; pdb.set_trace()
         cart_product = CartProduct.query.filter_by(cart_id=guest_cart.id, product_id=product_id).first()
         if cart_product is None:
             create_cart_product(guest_cart.id, product_id, quantity)
@@ -66,15 +79,30 @@ def get_cur_cart():
     return cart_dict
 
 def merge_carts(guest_cart, user_cart):
-    import pdb; pdb.set_trace()
+    db.session.refresh(user_cart)
     for guest_cart_product in guest_cart.cart_products:
+        # import pdb; pdb.set_trace()
         matching_user_cart_product = next((cp for cp in user_cart.cart_products if cp.product_id == guest_cart_product.product_id), None)
         if matching_user_cart_product is not None:
             matching_user_cart_product.quantity += guest_cart_product.quantity
         else:
-            create_cart_product(user_cart.id, guest_cart_product.product_id, guest_cart_product.quantity)
+            cart_prod = create_cart_product(user_cart.id, guest_cart_product.product_id, guest_cart_product.quantity)
+            db.session.add(cart_prod)
+            
+            db.session.commit()
     db.session.delete(guest_cart)
     db.session.commit()
+
+# def merge_carts(guest_cart, user_cart):
+#     for guest_cart_product in guest_cart.cart_products:
+#         matching_user_cart_product = next((cp for cp in user_cart.cart_products if cp.product_id == guest_cart_product.product_id), None)
+#         if matching_user_cart_product is not None:
+#             matching_user_cart_product.quantity += guest_cart_product.quantity
+#         else:
+#             cart_product = CartProduct(cart=user_cart, product=guest_cart_product.product, quantity=guest_cart_product.quantity)
+#             db.session.add(cart_product)
+#     db.session.delete(guest_cart)
+#     db.session.commit()
 
 def merge_guest_cart():
     
@@ -85,6 +113,7 @@ def merge_guest_cart():
             db.session.add(user_cart)
             db.session.commit()
         guest_cart = get_cart_by_id(session['guest_cart_id'])
+        db.session.flush()
         merge_carts(guest_cart, user_cart)
         del session['guest_cart_id']
 

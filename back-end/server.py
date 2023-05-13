@@ -19,6 +19,14 @@ CORS(app,supports_credentials=True)
 os.system("source secrets.sh")
 api_key = os.environ['API_KEY']
 
+
+
+@app.route('/clear_session_cookie')
+def clear_session_cookie():
+    response = make_response('Session cookie cleared!')
+    response.delete_cookie('session')
+    return response
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -36,7 +44,7 @@ def process_login():
         if user.password == password:
             session['user_id'] = user.customer.id
             print("process login", session["user_id"])
-            crud.merge_guest_cart() # Merge the guest cart with the user's cart, if applicable
+            cart_f.merge_guest_cart() # Merge the guest cart with the user's cart, if applicable
             return jsonify({"id":user.customer.id, 
                             "fname":user.fname,
                             "lname":user.lname,

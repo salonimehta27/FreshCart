@@ -178,7 +178,7 @@ class Cart(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    cart_products = db.relationship("CartProduct", back_populates="cart")
+    cart_products = db.relationship("CartProduct", back_populates="cart", cascade="save-update, merge, delete, delete-orphan")
     customer = db.relationship("Customer", back_populates="cart")
     
     def to_dict(self):
@@ -204,6 +204,11 @@ class CartProduct(db.Model):
 
     cart = db.relationship("Cart", back_populates="cart_products")
     product = db.relationship("Product", back_populates="cart_products")
+
+    def __init__(self, cart_id, product_id, quantity):
+        self.cart_id = cart_id
+        self.product_id = product_id
+        self.quantity = quantity
 
     def to_dict(self):
         return {

@@ -14,6 +14,7 @@ import {
 	cartItemsCleared,
 } from "./components/CustomerSide/cartsSlice";
 import Cart from "./components/CustomerSide/Cart";
+import Container from "react-bootstrap/Container";
 function App() {
 	const dispatch = useDispatch();
 	const currentUser = useSelector((state) => state.currentUser.entities);

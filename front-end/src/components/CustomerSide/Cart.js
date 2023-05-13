@@ -7,7 +7,7 @@ import {
 	cartItemsCleared,
 } from "./cartsSlice";
 
-import "bootstrap/dist/css/bootstrap.min.css";
+import { MDBTable, MDBTableHead, MDBTableBody } from "mdbreact";
 
 function Cart() {
 	const dispatch = useDispatch();
@@ -30,7 +30,11 @@ function Cart() {
 
 	// Remove item from cart
 	const handleRemoveItem = (id) => {
-		dispatch(cartItemsRemoved(id));
+		fetch(`http://localhost:5000/cart/${id}`, {
+			method: "DELETE",
+		})
+			.then((r) => r.json())
+			.then(() => dispatch(cartItemsRemoved(id)));
 	};
 
 	// Clear cart
@@ -51,8 +55,8 @@ function Cart() {
 	return (
 		<div className="container mt-5">
 			<h2 className="mb-4">Shopping Cart</h2>
-			<table className="table">
-				<thead>
+			<MDBTable>
+				<MDBTableHead>
 					<tr>
 						<th>Product</th>
 						<th>Quantity</th>
@@ -60,8 +64,8 @@ function Cart() {
 						<th>Total</th>
 						<th>Actions</th>
 					</tr>
-				</thead>
-				<tbody>
+				</MDBTableHead>
+				<MDBTableBody>
 					{cartItems &&
 						cartItems.cart_products &&
 						cartItems.cart_products.map((item) => {
@@ -107,11 +111,11 @@ function Cart() {
 								</tr>
 							);
 						})}
-				</tbody>
+				</MDBTableBody>
 				<tfoot>
 					<tr>
 						<td colSpan="3">Total:</td>
-						<td>${totalPrice && totalPrice.toFixed(2)}</td>
+						<td>${totalPrice ? totalPrice.toFixed(2) : "0.00"}</td>
 						<td>
 							<button className="btn btn-secondary" onClick={handleClearCart}>
 								Clear cart
@@ -119,7 +123,7 @@ function Cart() {
 						</td>
 					</tr>
 				</tfoot>
-			</table>
+			</MDBTable>
 		</div>
 	);
 }
