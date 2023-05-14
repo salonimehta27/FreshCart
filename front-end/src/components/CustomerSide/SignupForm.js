@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { Form, Button, Container } from "react-bootstrap";
 function SignupForm() {
 	const [formData, setFormData] = useState({
 		fname: "",
@@ -41,60 +41,69 @@ function SignupForm() {
 	};
 
 	return (
-		<form onSubmit={handleSubmit}>
-			<h1>Sign up</h1>
-			<label>
-				First Name:
-				<input
-					type="text"
-					name="fname"
-					value={formData.fname}
-					onChange={handleChange}
-					required
-				/>
-			</label>
-			<label>
-				Last Name:
-				<input
-					type="text"
-					name="lname"
-					value={formData.lname}
-					onChange={handleChange}
-					required
-				/>
-			</label>
-			<label>
-				Username:
-				<input
-					type="text"
-					name="username"
-					value={formData.username}
-					onChange={handleChange}
-					required
-				/>
-			</label>
-			<label>
-				Email:
-				<input
-					type="email"
-					name="email"
-					value={formData.email}
-					onChange={handleChange}
-					required
-				/>
-			</label>
-			<label>
-				Password:
-				<input
-					type="password"
-					name="password"
-					value={formData.password}
-					onChange={handleChange}
-					required
-				/>
-			</label>
-			<button type="submit">Sign Up</button>
-		</form>
+		<Container>
+			<Form onSubmit={handleSubmit}>
+				<h1>Sign up</h1>
+				<Form.Group controlId="formBasicFirstName">
+					<Form.Label>First Name:</Form.Label>
+					<Form.Control
+						type="text"
+						name="fname"
+						value={formData.fname}
+						onChange={handleChange}
+						required
+					/>
+				</Form.Group>
+
+				<Form.Group controlId="formBasicLastName">
+					<Form.Label>Last Name:</Form.Label>
+					<Form.Control
+						type="text"
+						name="lname"
+						value={formData.lname}
+						onChange={handleChange}
+						required
+					/>
+				</Form.Group>
+
+				<Form.Group controlId="formBasicUsername">
+					<Form.Label>Username:</Form.Label>
+					<Form.Control
+						type="text"
+						name="username"
+						value={formData.username}
+						onChange={handleChange}
+						required
+					/>
+				</Form.Group>
+
+				<Form.Group controlId="formBasicEmail">
+					<Form.Label>Email:</Form.Label>
+					<Form.Control
+						type="email"
+						name="email"
+						value={formData.email}
+						onChange={handleChange}
+						required
+					/>
+				</Form.Group>
+
+				<Form.Group controlId="formBasicPassword">
+					<Form.Label>Password:</Form.Label>
+					<Form.Control
+						type="password"
+						name="password"
+						value={formData.password}
+						onChange={handleChange}
+						required
+					/>
+				</Form.Group>
+
+				<Button variant="primary" type="submit">
+					Sign Up
+				</Button>
+			</Form>
+		</Container>
 	);
 }
 

@@ -1,16 +1,18 @@
 from flask import (Flask, render_template, make_response,request, flash,get_flashed_messages, session, redirect) 
-from model import connect_to_db, db, User, Customer, CustomerRep, Driver
+from model import connect_to_db, db, User, Customer, CustomerRep, Driver, OrderItem,Order, Product
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, jsonify
 from flask_cors import CORS, cross_origin
 import os
 import crud
 import cart_f
+import stripe
+import json
 
 app = Flask(__name__)
 app.app_context().push()
 app.secret_key = "dev"
-
+stripe.api_key = "sk_test_51KHMZ6LX7eA72NUeag5u1hQJjM2mA4mZzEBxgIuKwpNPkk9ekkolUBze9nUhVqAM0E5WpBUeZaVAacZeT9orYvKj00wXc4izAv"
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'
@@ -141,7 +143,7 @@ def get_cart():
         guest_cart_id = session["guest_cart_id"]
         guest_cart = cart_f.get_cart_by_id(guest_cart_id)
         if guest_cart is not None:
-            return jsonify(cart_f.create_cart_response(cart, guest_cart_id))
+            return jsonify(cart_f.create_cart_response(guest_cart, guest_cart_id))
     return jsonify({"error": "Empty Cart"})
 
 @app.route('/cart/<product_id>', methods=['DELETE'])
@@ -185,6 +187,32 @@ def update_customer_info():
 
     return jsonify(result)
 
+@app.route('/submit_order', methods=['POST'])
+def submit_order():
+    data = request.get_json()
+    customer_id = data.get('customer_id')
+    order_items = data.get('order_items')
+
+    total_price = sum(item['quantity'] * item['price'] for item in order_items)
+    total_price = round(total_price, 2)
+
+    new_order = Order(customer_id=customer_id, total=total_price)
+    db.session.add(new_order)
+
+    for item in order_items:
+        order_item = OrderItem(order=new_order, product_id=item['product_id'], quantity=item['quantity'], price=item['price'])
+        db.session.add(order_item)
+
+
+    if customer_id:
+        cart = cart_f.get_cart_by_customer_id(customer_id)
+    if cart:
+        cart.cart_products = []
+        db.session.commit()
+
+    # Return a JSON response indicating success
+    return jsonify({'success': True})
+
 
 # Route for updating driver info
 @app.route('/update_driver_info', methods=['POST'])
@@ -196,7 +224,36 @@ def update_driver_info():
     result = crud.update_driver_info(user_id, car_model=car_model, license_plate=license_plate)
 
     return jsonify(result)
+def calculate_order_amount(items):
+    total = 0
+    
+    for cart_product in items["cart_products"]:
+        for product in items['products']:
+            if cart_product['product_id'] == product['id']:
+                total += round(product['price'], 2) * cart_product['quantity']
+                break
+    
+    return int(total * 100)
 
+@app.route('/create-payment-intent', methods=['POST'])
+def create_payment():
+    try:
+        
+        data = json.loads(request.data)
+        # Create a PaymentIntent with the order amount and currency
+        intent = stripe.PaymentIntent.create(
+            amount=calculate_order_amount(data['items']),
+            currency='usd',
+            automatic_payment_methods={
+                'enabled': True,
+            },
+        )
+        
+        return jsonify({
+            'clientSecret': intent['client_secret']
+        })
+    except Exception as e:
+        return jsonify(error=str(e)), 403
 
 @app.route('/nearest_driver', methods=['POST'])
 def nearest_driver():

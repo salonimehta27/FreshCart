@@ -1,21 +1,24 @@
 import React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { productFiltered } from "./productsSlice";
 import { currentUserAdded, currentUserRemoved } from "./loginSlice";
 import Navbar from "react-bootstrap/Navbar";
+import Badge from "@material-ui/core/Badge";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
+import ShoppingCartIcon from "@material-ui/icons/ShoppingCart";
 
 function CustomNavbar({ currentUser }) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [categoryFilter, setCategoryFilter] = useState("all");
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
+	const cartData = useSelector((state) => state.carts.items);
 
 	const handleSearch = (searchQuery, categoryFilter) => {
 		dispatch(productFiltered({ searchQuery, categoryFilter }));
@@ -49,7 +52,6 @@ function CustomNavbar({ currentUser }) {
 				<Navbar.Toggle aria-controls="basic-navbar-nav" />
 				<Navbar.Collapse id="basic-navbar-nav">
 					<Nav className="me-auto">
-						<Nav.Link href="/cart">Cart</Nav.Link>
 						{currentUser && !currentUser.error ? (
 							<a
 								href="/"
@@ -60,7 +62,7 @@ function CustomNavbar({ currentUser }) {
 								Logout
 							</a>
 						) : (
-							<Nav.Link href="/login">Login/Signup</Nav.Link>
+							<Nav.Link href="/login">Login</Nav.Link>
 						)}
 						<NavDropdown title="Categories" id="basic-nav-dropdown">
 							<NavDropdown.Item
@@ -93,6 +95,21 @@ function CustomNavbar({ currentUser }) {
 								Category 3
 							</NavDropdown.Item>
 						</NavDropdown>
+					</Nav>
+					<Nav className="d-flex">
+						<Nav.Link href="/cart" eventKey={2} className="justify-content-end">
+							<Badge
+								color="secondary"
+								overlap="rectangular"
+								badgeContent={
+									cartData && cartData.cart_products
+										? cartData.cart_products.length
+										: null
+								}
+							>
+								<ShoppingCartIcon style={{ color: "white" }} />
+							</Badge>
+						</Nav.Link>
 					</Nav>
 					<Form className="d-flex">
 						<Form.Control

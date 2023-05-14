@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { currentUserAdded } from "./loginSlice";
+import { Container, Form, Button } from "react-bootstrap";
 function LoginForm() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -28,34 +29,37 @@ function LoginForm() {
 		navigate("/");
 	};
 	// console.log(currentUser);
+
 	return (
-		<div>
-			<form onSubmit={handleSubmit}>
+		<Container>
+			<Form onSubmit={handleSubmit}>
 				<h1>Login</h1>
-				<label>
-					Email:
-					<input
+				<Form.Group controlId="formBasicEmail">
+					<Form.Label>Email:</Form.Label>
+					<Form.Control
 						type="email"
-						value={email}
+						placeholder="Enter email"
 						onChange={(event) => setEmail(event.target.value)}
 					/>
-				</label>
-				<br />
-				<label>
-					Password:
-					<input
+				</Form.Group>
+
+				<Form.Group controlId="formBasicPassword">
+					<Form.Label>Password:</Form.Label>
+					<Form.Control
 						type="password"
-						value={password}
+						placeholder="Password"
 						onChange={(event) => setPassword(event.target.value)}
 					/>
-				</label>
-				<br />
-				<button type="submit">Log In</button>
-			</form>
+				</Form.Group>
+
+				<Button variant="primary" type="submit">
+					Log In
+				</Button>
+			</Form>
 			<p>
 				Don't have an account? <Link to="/signup">Sign up</Link> now.
 			</p>
-		</div>
+		</Container>
 	);
 }
 

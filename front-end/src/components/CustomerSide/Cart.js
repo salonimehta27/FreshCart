@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
 	cartItemsAdded,
@@ -6,13 +6,17 @@ import {
 	cartItemsUpdated,
 	cartItemsCleared,
 } from "./cartsSlice";
-
 import { MDBTable, MDBTableHead, MDBTableBody } from "mdbreact";
+import { Link } from "react-router-dom";
+
 function Cart() {
 	const dispatch = useDispatch();
 	const cartItems = useSelector((state) => state.carts.items);
+	const currentUser = useSelector((state) => state.currentUser.entities);
+	const [checkoutVisible, setCheckoutVisible] = useState(false);
 
 	// Update cart item quantity
+	// console.log(currentUser);
 	const handleQuantityChange = (id, quantity) => {
 		fetch(`http://localhost:5000/cart/${id}`, {
 			method: "PATCH",
@@ -56,6 +60,10 @@ function Cart() {
 		dispatch(cartItemsCleared());
 	};
 
+	const handleClick = () => {
+		alert("payyyyyyy ");
+	};
+
 	// Calculate total price of all items in cart
 	const totalPrice =
 		cartItems &&
@@ -65,7 +73,6 @@ function Cart() {
 			const product = cartItems.products.find((p) => p.id === item.product_id);
 			return total + product.price * item.quantity;
 		}, 0);
-
 	return (
 		<div className="container mt-5">
 			<h2 className="mb-4">Shopping Cart</h2>
@@ -131,9 +138,19 @@ function Cart() {
 						<td colSpan="3">Total:</td>
 						<td>${totalPrice ? totalPrice.toFixed(2) : "0.00"}</td>
 						<td>
-							<button className="btn btn-secondary" onClick={handleClearCart}>
-								Clear cart
-							</button>
+							{currentUser && !currentUser.error ? (
+								<Link
+									to={`/payment?cartItems=${encodeURIComponent(
+										JSON.stringify(cartItems)
+									)}`}
+								>
+									<button>Checkout</button>
+								</Link>
+							) : (
+								<>
+									<a href="/login">Login to your account to place order</a>
+								</>
+							)}
 						</td>
 					</tr>
 				</tfoot>
