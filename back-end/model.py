@@ -5,6 +5,7 @@ import re
 
 db = SQLAlchemy()
 
+
 class User(db.Model):
     __tablename__ = 'users'
 
@@ -20,7 +21,7 @@ class User(db.Model):
 
     customer = db.relationship('Customer', back_populates='user', uselist=False)
     customer_rep = db.relationship('CustomerRep', back_populates='user', uselist=False)
-    driver = db.relationship('Driver', back_populates='user', uselist=False)
+    # driver = db.relationship('Driver', back_populates='user', uselist=False)
 
     
 
@@ -63,15 +64,26 @@ class Driver(db.Model):
     __tablename__ = 'drivers'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    name = db.Column(db.String(255))
     car_model = db.Column(db.String(255), nullable=False)
     license_plate = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now(), onupdate=db.func.now())
 
-    user = db.relationship('User', back_populates='driver')
-    locations = db.relationship('Location', back_populates='driver')
+    location = db.relationship('Location', back_populates='driver')
+    orders = db.relationship("Order", back_populates="driver")
 
+    def get_location(self):
+        return {"latitude":self.location.latitude, "longitude": self.location.longtitude}
+    
+    def to_dict(self):
+        return {
+            "id":self.id,
+            "name":self.name,
+            "car_model":self.car_model,
+            "license_plate":self.license_plate,
+            "location": self.get_location()
+        }
     def __repr__(self):
         return f'<Driver id={self.id} user_id={self.user_id} fname={self.user.name} car_model={self.car_model}>'
 
@@ -79,15 +91,15 @@ class Location(db.Model):
     __tablename__ = 'locations'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'))
-    driver_id = db.Column(db.Integer, db.ForeignKey('drivers.id'))
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=True)
+    driver_id = db.Column(db.Integer, db.ForeignKey('drivers.id'), nullable=True)
     latitude = db.Column(db.Numeric, nullable=False)
     longitude = db.Column(db.Numeric, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now(), onupdate=db.func.now())
 
     customer = db.relationship('Customer', back_populates='locations')
-    driver = db.relationship('Driver', back_populates='locations')
+    driver = db.relationship('Driver', back_populates='location')
 
     def __repr__(self):
         return f'<Location id={self.id} customer_id={self.customer_id} driver_id={self.driver_id}>'
@@ -146,10 +158,25 @@ class Order(db.Model):
     total = db.Column(db.Float, nullable=False, default=0)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
+    driver_id = db.Column(db.Integer, db.ForeignKey("drivers.id", ondelete="CASCADE"), nullable=True)
+    latitude = db.Column(db.Numeric, nullable=True)
+    longitude = db.Column(db.Numeric, nullable=True)
 
     customer = db.relationship("Customer", back_populates="orders")
+    driver = db.relationship("Driver", back_populates="orders")
     order_items = db.relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "customer_id": self.customer_id,
+            "total": self.total,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+            "driver_id": self.driver_id,
+            "latitude": self.latitude,
+            "longitude": self.longitude
+        }
     def __repr__(self):
         return f"<Order {self.id}>"
     
@@ -276,4 +303,5 @@ if __name__ == "__main__":
     from server import app
     connect_to_db(app)
     db.create_all()
+    app.run()
   

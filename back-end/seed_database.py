@@ -1,12 +1,13 @@
 import os
 import json 
-from random import choice, randint 
+from random import choice, randint, uniform
 from datetime import datetime
 import requests
 from flask import Flask, jsonify
-from model import connect_to_db, db, Product
+from model import connect_to_db, db, Product, Driver, Location
 from server import app
-
+from faker import Faker
+from math import radians, sin, cos, sqrt
 import crud 
 import model 
 import server 
@@ -49,4 +50,53 @@ if response.status_code == 200:
 else:
     print("Error retrieving data")
 
+
+
+user = crud.create_user("test1", "last", "test1", "test1@test.com", "test", "customer")
+db.session.commit()
+fake = Faker()
+
+num_drivers = 10
+
+# Central location (zipcode 10001, NY)
+central_latitude = 40.748817
+central_longitude = -73.985428
+
+# Radius in miles
+radius_miles = 7
+
+# Convert radius to degrees (approximately 1 degree = 69 miles)
+radius_degrees = radius_miles / 69.0
+
+# Generate mock driver data and store in the database
+for _ in range(num_drivers):
+    # Generate random coordinates within the radius
+    u = uniform(0, 1)
+    v = uniform(0, 1)
+    w = radius_degrees * sqrt(u)
+    t = 2 * 3.14159265359 * v
+    x = w * cos(t)
+    y = w * sin(t)
+
+    # Calculate the new latitude and longitude
+    new_latitude = central_latitude + (y / 111.0)
+    new_longitude = central_longitude + (x / (111.0 * cos(radians(central_latitude))))
+
+    driver = Driver(
+        name=fake.name(),
+        car_model=fake.word(),
+        license_plate=fake.license_plate()
+    )
+
+    location = Location(
+        latitude=new_latitude,
+        longitude=new_longitude,
+        driver=driver
+    )
+
+    # Add the driver and location objects to the session
+    db.session.add(driver)
+    db.session.add(location)
+
+# Commit the changes to the database
 db.session.commit()

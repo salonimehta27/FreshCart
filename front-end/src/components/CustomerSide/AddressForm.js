@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import { AddressElement } from "@stripe/react-stripe-js";
 
-const AddressForm = () => {
-	const [address, setAddress] = useState(null);
-	console.log(address);
+const AddressForm = ({ setAddress }) => {
 	return (
 		<form>
 			<h3>Shipping</h3>

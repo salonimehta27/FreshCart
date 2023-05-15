@@ -20,7 +20,7 @@ function ProductDetails() {
 			{product &&
 				product.images &&
 				product.images.map((image) => (
-					<img key={image} src={image} alt="product image"></img>
+					<img key={image} src={image} alt={product.title}></img>
 				))}
 		</div>
 	);

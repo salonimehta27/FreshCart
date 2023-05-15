@@ -1,6 +1,8 @@
 from flask import (Flask, render_template, make_response,request, flash,get_flashed_messages, session, redirect) 
-from model import connect_to_db, db, User, Customer, CustomerRep, Driver, OrderItem,Order, Product
+from model import connect_to_db, db, User, Customer, CustomerRep, Driver, OrderItem,Order, Product, Location
 from flask_sqlalchemy import SQLAlchemy
+
+
 from flask import Flask, jsonify
 from flask_cors import CORS, cross_origin
 import os
@@ -36,6 +38,7 @@ def index():
 ######### LOGIN/SIGNUP/LOGOUT ###########
 
 @app.route("/login", methods = ["POST"])
+@cross_origin(supports_credentials=True)
 def process_login():
     email = request.json.get("email")
     password = request.json.get("password")
@@ -63,8 +66,9 @@ def process_login():
 def currentUser():
     if "user_id" in session:
         print("me",session["user_id"])
-        user = crud.get_customer_by_id(session["user_id"]).user
+        user = crud.get_customer_by_id(session["user_id"])
         if user is not None:
+           user= user.user
            return jsonify({"id":user.id, "fname":user.fname,
                            "lname":user.lname,
                            "username":user.username,
@@ -254,10 +258,9 @@ def create_payment():
         })
     except Exception as e:
         return jsonify(error=str(e)), 403
+    
 
-@app.route('/nearest_driver', methods=['POST'])
-def nearest_driver():
-    customer_id = request.json['customer_id']
+def nearest_driver(customer_id):
     customer_location = Location.query.filter_by(customer_id=customer_id).first()
 
     if not customer_location:
@@ -285,6 +288,28 @@ def nearest_driver():
         return jsonify({'error': 'No drivers found'}), 404
 
     return jsonify
+
+@app.route('/api/places', methods=["POST"])
+def get_places():
+    customer_id = request.json.get("customerId")
+    lat = request.json.get("latitude")
+    lng = request.json.get("longitude")
+
+    # Check if the customer already has a location with the same latitude and longitude
+    existing_location = Location.query.filter_by(customer_id=customer_id, latitude=lat, longitude=lng).first()
+    
+    if existing_location:
+        return nearest_driver(customer_id)
+    
+    # Create a new location
+    location = Location(customer_id=customer_id, latitude=lat, longitude=lng)
+    db.session.add(location)
+    db.session.commit()
+
+    return nearest_driver(customer_id)
+
+
+# @app.route('/nearest_driver', methods=['POST'])
 
 if __name__ == "__main__":
     connect_to_db(app)

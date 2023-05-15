@@ -7,11 +7,12 @@ import { useSelector, useDispatch } from "react-redux";
 import { cartItemsAdded } from "./cartsSlice";
 import { useLocation } from "react-router-dom";
 function PaymentForm() {
-	console.log(process.env);
-	console.log(process.env.REACT_APP_STRIPE_API_KEY);
+	// console.log(process.env);
+	// console.log(process.env.REACT_APP_STRIPE_API_KEY);
 	const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_API_KEY);
 	const [clientSecret, setClientSecret] = useState("");
 	const dispatch = useDispatch();
+	const [address, setAddress] = useState(null);
 	//const cartItems = useSelector((state) => state.carts.items);
 	const location = useLocation();
 	const cartItems = JSON.parse(
@@ -44,8 +45,8 @@ function PaymentForm() {
 		<div className="container">
 			{clientSecret && (
 				<Elements options={options} stripe={stripePromise}>
-					<AddressForm />
-					<CheckoutForm cartItems={cartItems} />
+					<AddressForm setAddress={setAddress} />
+					<CheckoutForm cartItems={cartItems} address={address} />
 				</Elements>
 			)}
 		</div>

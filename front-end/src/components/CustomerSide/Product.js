@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { productsReceived } from "./productsSlice";
 import { useSelector, useDispatch } from "react-redux";
-import { cartItemsAdded, cartItemsUpdated } from "./cartsSlice";
+import { cartItemsAdded } from "./cartsSlice";
 import { Card, Row, Col, Button } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 

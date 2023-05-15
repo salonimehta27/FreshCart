@@ -7,8 +7,9 @@ import {
 import { useDispatch } from "react-redux";
 import { cartItemsCleared } from "./cartsSlice";
 import { useNavigate } from "react-router-dom";
+import { currentAddress } from "./loginSlice";
 
-export default function CheckoutForm({ cartItems }) {
+export default function CheckoutForm({ cartItems, address }) {
 	//console.log(cartItems);
 	const stripe = useStripe();
 	const elements = useElements();
@@ -17,6 +18,7 @@ export default function CheckoutForm({ cartItems }) {
 	const [message, setMessage] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const navigate = useNavigate();
+	//console.log(address);
 	function formatData(cartData) {
 		const orderData = {
 			customer_id: cartData.customer_id,
@@ -35,7 +37,7 @@ export default function CheckoutForm({ cartItems }) {
 		});
 		return orderData;
 	}
-	console.log(formatData(cartItems));
+	// console.log(formatData(cartItems));
 	useEffect(() => {
 		if (!stripe) {
 			return;
@@ -89,7 +91,9 @@ export default function CheckoutForm({ cartItems }) {
 			.then((data) => {
 				console.log("Success:", data);
 				dispatch(cartItemsCleared());
-				navigate("/order_success");
+				dispatch(currentAddress(address));
+				localStorage.setItem("address", JSON.stringify(address));
+				navigate(`/order_success`);
 			})
 			.catch((error) => {
 				console.error("Error:", error);
