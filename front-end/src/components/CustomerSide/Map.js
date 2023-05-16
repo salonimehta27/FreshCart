@@ -7,36 +7,53 @@ const Map = () => {
 	const [place, setPlace] = useState(null);
 	const customerId = useSelector((state) => state.currentUser.entities);
 	const address = useSelector((state) => state.currentUser.address);
-	//console.log(customerId);
+	const [driver, setDriver] = useState(null);
+	console.log(customerId);
 	useEffect(() => {
-		// Geocode the address and fetch the latitude and longitude
-		const geocodeAddress = async () => {
+		const fetchData = async () => {
 			try {
-				const response = await axios.get(
+				const geocodeResponse = await axios.get(
 					`https://maps.googleapis.com/maps/api/geocode/json?address=${address.line1}, ${address.city}, ${address.state}, ${address.postal_code}, ${address.country}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`
 				);
 
-				const { results } = response.data;
+				const { results } = geocodeResponse.data;
 
 				if (results.length > 0) {
 					const { lat, lng } = results[0].geometry.location;
-					// Store the latitude and longitude in the places state
 					setPlace({ lat, lng });
+
+					if (customerId) {
+						const driverResponse = await axios.post(
+							"http://localhost:5000/api/places",
+							{
+								customerId: customerId.customer_id,
+								latitude: lat,
+								longitude: lng,
+							}
+						);
+
+						setDriver(driverResponse.data);
+					}
 				}
 			} catch (error) {
-				console.error("Error geocoding address:", error);
+				console.error("Error:", error);
 			}
-
-			await axios.post("http://localhost:5000/api/places", {
-				customerId: customerId.customer_id,
-				latitude: place.lat,
-				longitude: place.lng,
-			});
 		};
 
-		geocodeAddress();
-	}, [address]);
+		const delay = 2000;
+		let timer;
+
+		if (customerId) {
+			timer = setTimeout(() => {
+				fetchData();
+			}, delay);
+		}
+
+		return () => clearTimeout(timer);
+	}, [customerId, address]);
+
 	// console.log(place);
+	console.log("driver", driver);
 	return (
 		<div className="container" style={{ height: "100vh", width: "100%" }}>
 			<GoogleMapReact

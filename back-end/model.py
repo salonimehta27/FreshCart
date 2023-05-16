@@ -73,17 +73,25 @@ class Driver(db.Model):
     location = db.relationship('Location', back_populates='driver')
     orders = db.relationship("Order", back_populates="driver")
 
-    def get_location(self):
-        return {"latitude":self.location.latitude, "longitude": self.location.longtitude}
+    # def get_location(self):
+    #     return {"latitude":self.location.latitude, "longitude": self.location.longtitude}
     
+    def get_location(self):
+        locations = []
+        for location in self.location:
+            locations.append({"latitude": location.latitude, "longitude": location.longitude})
+        return locations[0]
     def to_dict(self):
         return {
-            "id":self.id,
-            "name":self.name,
-            "car_model":self.car_model,
-            "license_plate":self.license_plate,
-            "location": self.get_location()
-        }
+            "id": self.id,
+            "name": self.name,
+            "car_model": self.car_model,
+            "license_plate": self.license_plate,
+            "location": {
+                "latitude": str(self.get_location()["latitude"]),  # Convert to string for JSON serialization
+                "longitude": str(self.get_location()["longitude"])  # Convert to string for JSON serialization
+            }
+    }
     def __repr__(self):
         return f'<Driver id={self.id} user_id={self.user_id} fname={self.user.name} car_model={self.car_model}>'
 

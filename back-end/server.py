@@ -1,7 +1,7 @@
 from flask import (Flask, render_template, make_response,request, flash,get_flashed_messages, session, redirect) 
 from model import connect_to_db, db, User, Customer, CustomerRep, Driver, OrderItem,Order, Product, Location
 from flask_sqlalchemy import SQLAlchemy
-
+import requests
 
 from flask import Flask, jsonify
 from flask_cors import CORS, cross_origin
@@ -14,7 +14,6 @@ import json
 app = Flask(__name__)
 app.app_context().push()
 app.secret_key = "dev"
-stripe.api_key = "sk_test_51KHMZ6LX7eA72NUeag5u1hQJjM2mA4mZzEBxgIuKwpNPkk9ekkolUBze9nUhVqAM0E5WpBUeZaVAacZeT9orYvKj00wXc4izAv"
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'
@@ -22,6 +21,8 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'None'
 CORS(app,supports_credentials=True)
 os.system("source secrets.sh")
 api_key = os.environ['API_KEY']
+stripe.api_key= os.environ['STRIPE_API_KEY']
+google_api_key = os.environ['GOOGLE_API_KEY']
 
 
 
@@ -259,12 +260,33 @@ def create_payment():
     except Exception as e:
         return jsonify(error=str(e)), 403
     
+def get_stores():
+    type = "department_store"
+    query = "Walmart"
+    location = "New York"
+    url = f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={query}+in+{location}&type={type}&key={google_api_key}"
+    
+    response = requests.get(url)
+    data = response.json()
+    walmartStores = data["results"]
+    
+    walmartLocations = [
+        {
+            "name": store["name"],
+            "address": store["formatted_address"],
+            "latitude": store["geometry"]["location"]["lat"],
+            "longitude": store["geometry"]["location"]["lng"],
+        }
+        for store in walmartStores
+    ]
 
-def nearest_driver(customer_id):
+    return walmartLocations
+
+def find_nearest_driver(customer_id, customer_lat, customer_lng):
     customer_location = Location.query.filter_by(customer_id=customer_id).first()
 
     if not customer_location:
-        return jsonify({'error': 'Customer location not found'}), 404
+        return None
 
     drivers = Driver.query.all()
     nearest_driver = None
@@ -276,37 +298,187 @@ def nearest_driver(customer_id):
         if not driver_location:
             continue
 
-        # calculate distance between customer location and driver location
-        distance = crud.calculate_distance(customer_location.latitude, customer_location.longitude, driver_location.latitude, driver_location.longitude)
+        distance_to_customer = crud.calculate_distance(
+            customer_lat, customer_lng, driver_location.latitude, driver_location.longitude
+        )
 
-        # check if this is the closest driver
-        if shortest_distance is None or distance < shortest_distance:
-            shortest_distance = distance
+        if shortest_distance is None or distance_to_customer < shortest_distance:
+            shortest_distance = distance_to_customer
             nearest_driver = driver
 
-    if not nearest_driver:
-        return jsonify({'error': 'No drivers found'}), 404
+    return nearest_driver
 
-    return jsonify
 
-@app.route('/api/places', methods=["POST"])
+def find_nearest_walmart(customer_lat, customer_lng):
+    walmart_locations = get_stores()
+    shortest_distance = None
+    nearest_walmart = None
+
+    for walmart in walmart_locations:
+        distance_to_walmart = crud.calculate_distance(
+            customer_lat, customer_lng, walmart["latitude"], walmart["longitude"]
+        )
+
+        if shortest_distance is None or distance_to_walmart < shortest_distance:
+            shortest_distance = distance_to_walmart
+            nearest_walmart = walmart
+
+    return nearest_walmart
+
+@app.route("/api/places", methods=["POST"])
+@cross_origin(supports_credentials=True)
 def get_places():
     customer_id = request.json.get("customerId")
     lat = request.json.get("latitude")
     lng = request.json.get("longitude")
 
-    # Check if the customer already has a location with the same latitude and longitude
     existing_location = Location.query.filter_by(customer_id=customer_id, latitude=lat, longitude=lng).first()
-    
+
     if existing_location:
-        return nearest_driver(customer_id)
-    
-    # Create a new location
+        nearest_driver_info = find_nearest_driver(customer_id, lat, lng)
+        nearest_walmart_location = find_nearest_walmart(lat, lng)
+
+        return {
+            "driver": nearest_driver_info.to_dict() if nearest_driver_info else None,
+            "walmart_location": nearest_walmart_location
+        }
+
     location = Location(customer_id=customer_id, latitude=lat, longitude=lng)
     db.session.add(location)
     db.session.commit()
 
-    return nearest_driver(customer_id)
+    nearest_driver_info = find_nearest_driver(customer_id, lat, lng)
+    nearest_walmart_location = find_nearest_walmart(lat, lng)
+
+    if not nearest_walmart_location:
+        return {
+            "error": "No Walmart locations found",
+            "driver": nearest_driver_info.to_dict() if nearest_driver_info else None,
+            "walmart_location": None
+        }
+
+    return {
+        "driver": nearest_driver_info.to_dict() if nearest_driver_info else None,
+        "walmart_location": nearest_walmart_location
+    }
+# def nearest_driver(customer_id, walmart_lat, walmart_lng):
+#     customer_location = Location.query.filter_by(customer_id=customer_id).first()
+
+#     if not customer_location:
+#         return jsonify({'error': 'Customer location not found'}), 404
+
+#     drivers = Driver.query.all()
+#     nearest_driver = None
+#     shortest_distance = None
+
+#     for driver in drivers:
+#         driver_location = Location.query.filter_by(driver_id=driver.id).first()
+
+#         if not driver_location:
+#             continue
+
+#         # calculate distance between customer location and driver location
+#         distance_to_customer = crud.calculate_distance(customer_location.latitude, customer_location.longitude, driver_location.latitude, driver_location.longitude)
+
+#         # calculate distance between driver location and Walmart location
+#         distance_to_walmart = crud.calculate_distance(driver_location.latitude, driver_location.longitude, walmart_lat, walmart_lng)
+
+#         # calculate total distance
+#         total_distance = distance_to_customer + distance_to_walmart
+
+#         # check if this is the closest driver
+#         if shortest_distance is None or total_distance < shortest_distance:
+#             shortest_distance = total_distance
+#             nearest_driver = driver
+
+#     if not nearest_driver:
+#         return jsonify({'error': 'No drivers found'}), 404
+
+#     return jsonify(nearest_driver.to_dict())
+
+
+
+# @app.route('/api/places', methods=["POST"])
+# def get_places():
+#     customer_id = request.json.get("customerId")
+#     lat = request.json.get("latitude")
+#     lng = request.json.get("longitude")
+#     # Check if the customer already has a location with the same latitude and longitude
+#     existing_location = Location.query.filter_by(customer_id=customer_id, latitude=lat, longitude=lng).first()
+
+#     if existing_location:
+#         return nearest_driver(customer_id, lat, lng)
+
+#     # Create a new location
+#     location = Location(customer_id=customer_id, latitude=lat, longitude=lng)
+#     db.session.add(location)
+#     db.session.commit()
+
+#     # Get Walmart locations
+#     walmart_locations = get_stores()
+
+#     # Find the Walmart location that results in the shortest distance for the driver
+#     shortest_distance = None
+#     nearest_walmart = None
+
+#     for walmart in walmart_locations:
+#         distance_to_walmart = crud.calculate_distance(lat, lng, walmart["latitude"], walmart["longitude"])
+#         if shortest_distance is None or distance_to_walmart < shortest_distance:
+#             shortest_distance = distance_to_walmart
+#             nearest_walmart = walmart
+
+#     if not nearest_walmart:
+#         return jsonify({'error': 'No Walmart locations found'}), 404
+
+#     return {"driver":nearest_driver(customer_id, nearest_walmart["latitude"], nearest_walmart["longitude"]), "walmart_location": jsonify(nearest_walmart)}
+
+# def nearest_driver(customer_id):
+#     customer_location = Location.query.filter_by(customer_id=customer_id).first()
+
+#     if not customer_location:
+#         return jsonify({'error': 'Customer location not found'}), 404
+
+#     drivers = Driver.query.all()
+#     nearest_driver = None
+#     shortest_distance = None
+
+#     for driver in drivers:
+#         driver_location = Location.query.filter_by(driver_id=driver.id).first()
+
+#         if not driver_location:
+#             continue
+
+#         # calculate distance between customer location and driver location
+#         distance = crud.calculate_distance(customer_location.latitude, customer_location.longitude, driver_location.latitude, driver_location.longitude)
+
+#         # check if this is the closest driver
+#         if shortest_distance is None or distance < shortest_distance:
+#             shortest_distance = distance
+#             nearest_driver = driver
+
+#     if not nearest_driver:
+#         return jsonify({'error': 'No drivers found'}), 404
+
+#     return jsonify(nearest_driver.to_dict())
+
+# @app.route('/api/places', methods=["POST"])
+# def get_places():
+#     customer_id = request.json.get("customerId")
+#     lat = request.json.get("latitude")
+#     lng = request.json.get("longitude")
+
+#     # Check if the customer already has a location with the same latitude and longitude
+#     existing_location = Location.query.filter_by(customer_id=customer_id, latitude=lat, longitude=lng).first()
+    
+#     if existing_location:
+#         return nearest_driver(customer_id)
+    
+#     # Create a new location
+#     location = Location(customer_id=customer_id, latitude=lat, longitude=lng)
+#     db.session.add(location)
+#     db.session.commit()
+
+#     return nearest_driver(customer_id)
 
 
 # @app.route('/nearest_driver', methods=['POST'])
