@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 function OrderSuccess() {
 	const address = useSelector((state) => state.currentUser.address);
-	console.log(address);
+	// console.log(address);
 	useEffect(() => {}, []);
 	return (
 		<div>

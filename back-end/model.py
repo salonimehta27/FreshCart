@@ -93,7 +93,7 @@ class Driver(db.Model):
             }
     }
     def __repr__(self):
-        return f'<Driver id={self.id} user_id={self.user_id} fname={self.user.name} car_model={self.car_model}>'
+        return f'<Driver id={self.id} fname={self.user.name} car_model={self.car_model}>'
 
 class Location(db.Model):
     __tablename__ = 'locations'
