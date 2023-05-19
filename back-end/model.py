@@ -112,6 +112,7 @@ class Location(db.Model):
     def __repr__(self):
         return f'<Location id={self.id} customer_id={self.customer_id} driver_id={self.driver_id}>'
 
+
 class Product(db.Model):
     __tablename__ = "products"
 

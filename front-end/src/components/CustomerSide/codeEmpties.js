@@ -128,3 +128,45 @@ function updateDriverLocation(driverId, driverLocation) {
 // function toDegrees(radians) {
 // 	return radians * (180 / Math.PI);
 // }
+
+// const moveTowards = (currentLocation, targetLocation, speed) => {
+// 	const latDiff = targetLocation.latitude - currentLocation.latitude;
+// 	const lngDiff = targetLocation.longitude - currentLocation.longitude;
+
+// 	const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
+
+// 	const ratio = speed / distance;
+// 	const newLat = currentLocation.latitude + latDiff * ratio;
+// 	const newLng = currentLocation.longitude + lngDiff * ratio;
+
+// 	return {
+// 		latitude: newLat,
+// 		longitude: newLng,
+// 	};
+// };
+
+// if (distance <= movementThreshold) {
+// 	currentStage = (currentStage + 1) % 2;
+// }
+{
+	/* {driver && walmartLocation && (
+								<>
+									<DirectionsService
+										options={{
+											origin: `${driver.location.latitude},${driver.location.longitude}`,
+											destination: `${walmartLocation.latitude},${walmartLocation.longitude}`,
+											travelMode: "DRIVING",
+										}}
+										callback={handleDirectionsToWalmartResponse}
+									/>
+									<DirectionsService
+										options={{
+											origin: `${walmartLocation.latitude},${walmartLocation.longitude}`,
+											destination: `${customerLoc.lat},${customerLoc.lng}`,
+											travelMode: "DRIVING",
+										}}
+										callback={handleDirectionsToPlaceResponse}
+									/>
+								</>
+							)} */
+}

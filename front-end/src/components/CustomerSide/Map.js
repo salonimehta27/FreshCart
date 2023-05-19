@@ -1,5 +1,11 @@
 /*global google*/
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+	useState,
+	useEffect,
+	useRef,
+	useCallback,
+	useMemo,
+} from "react";
 import {
 	GoogleMap,
 	Marker,
@@ -22,9 +28,18 @@ const Map = () => {
 	const [directionsToWalmart, setDirectionsToWalmart] = useState(null);
 	const [directionsToCustomer, setDirectionsToCustomer] = useState(null);
 	const { isLoaded } = useLoadScript({
-		//googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
+		googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
 	});
-	// const EarthRadius = 6371;
+
+	const cacheData = (key, data) => {
+		localStorage.setItem(key, JSON.stringify(data));
+	};
+
+	const getCachedData = (key) => {
+		const data = localStorage.getItem(key);
+		return data ? JSON.parse(data) : null;
+	};
+	const EarthRadius = 6371;
 	// Calculate the distance between two locations using the Haversine formula
 	function calculateDistance(lat1, lon1, lat2, lon2) {
 		const R = 6371; // Approximate radius of the Earth in kilometers
@@ -49,28 +64,69 @@ const Map = () => {
 		return degrees * (Math.PI / 180);
 	}
 
-	const moveTowards = (currentLocation, targetLocation, speed) => {
-		const latDiff = targetLocation.latitude - currentLocation.latitude;
-		const lngDiff = targetLocation.longitude - currentLocation.longitude;
+	function moveTowards(currentLocation, targetLocation, distance) {
+		const bearing = calculateBearing(currentLocation, targetLocation);
+		const currentLatRad = toRadians(currentLocation.latitude);
+		const currentLonRad = toRadians(currentLocation.longitude);
 
-		const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
+		const newLatRad = Math.asin(
+			Math.sin(currentLatRad) * Math.cos(distance / EarthRadius) +
+				Math.cos(currentLatRad) *
+					Math.sin(distance / EarthRadius) *
+					Math.cos(bearing)
+		);
 
-		const ratio = speed / distance;
-		const newLat = currentLocation.latitude + latDiff * ratio;
-		const newLng = currentLocation.longitude + lngDiff * ratio;
+		const newLonRad =
+			currentLonRad +
+			Math.atan2(
+				Math.sin(bearing) *
+					Math.sin(distance / EarthRadius) *
+					Math.cos(currentLatRad),
+				Math.cos(distance / EarthRadius) -
+					Math.sin(currentLatRad) * Math.sin(newLatRad)
+			);
 
 		return {
-			latitude: newLat,
-			longitude: newLng,
+			latitude: toDegrees(newLatRad),
+			longitude: toDegrees(newLonRad),
 		};
-	};
+	}
+
+	//Calculate the bearing (direction) from the current location to the target location
+	function calculateBearing(currentLocation, targetLocation) {
+		const lat1 = toRadians(currentLocation.latitude);
+		const lon1 = toRadians(currentLocation.longitude);
+		const lat2 = toRadians(targetLocation.latitude);
+		const lon2 = toRadians(targetLocation.longitude);
+
+		const y = Math.sin(lon2 - lon1) * Math.cos(lat2);
+		const x =
+			Math.cos(lat1) * Math.sin(lat2) -
+			Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+
+		const bearing = Math.atan2(y, x);
+
+		return bearing;
+	}
+
+	// Convert radians to degrees
+	function toDegrees(radians) {
+		return radians * (180 / Math.PI);
+	}
 
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				const geocodeResponse = await axios.get(
-					`https://maps.googleapis.com/maps/api/geocode/json?address=${address.line1}, ${address.city}, ${address.state}, ${address.postal_code}, ${address.country}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`
-				);
+				const cacheKey = "geocodeResponse";
+				let geocodeResponse = getCachedData(cacheKey);
+				console.log(geocodeResponse);
+				if (!geocodeResponse) {
+					console.log("google maps got touched");
+					geocodeResponse = await axios.get(
+						`https://maps.googleapis.com/maps/api/geocode/json?address=${address.line1}, ${address.city}, ${address.state}, ${address.postal_code}, ${address.country}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`
+					);
+					cacheData(cacheKey, geocodeResponse);
+				}
 
 				const { results } = geocodeResponse.data;
 
@@ -98,22 +154,25 @@ const Map = () => {
 				console.error("Error:", error);
 			}
 		};
-		const delay = 2000;
-		let timer;
+		// const delay = 2000;
+		// let timer;
 
 		if (customerId) {
-			timer = setTimeout(() => {
-				fetchData();
-			}, delay);
+			// timer = setTimeout(() => {
+			fetchData();
+			// }, delay);
 		}
 
-		return () => clearTimeout(timer);
+		// return () => clearTimeout(timer);
 	}, [customerId, address]);
 
-	const simulateDriverMovementRef = useRef(null);
+	// // console.log(driver);
+	// // console.log(customerLoc);
+	// // console.log(walmartLocation);
+	// // console.log(directions);
 	useEffect(() => {
 		// Listen for the "driver_update" event
-		const simulateDriverMovement = () => {
+		function simulateDriverMovement() {
 			console.log("simulate");
 			const movementThreshold = 0.1;
 			const movementSpeed = 2;
@@ -151,9 +210,6 @@ const Map = () => {
 					targetLocation.longitude
 				);
 
-				// if (distance <= movementThreshold) {
-				// 	currentStage = (currentStage + 1) % 2;
-				// }
 				if (distance <= movementThreshold) {
 					if (currentStage === 0) {
 						// Reached Walmart location precisely, move to the next stage
@@ -176,29 +232,28 @@ const Map = () => {
 						latitude: driverLocation.latitude,
 					},
 				}));
-				console.log(driver.location);
+				// console.log(driver.location);
 				// Emit the updated driver location to the server via websockets
 				socket.emit("driver-location-update", {
 					id: driver.id,
 					driverLocation,
 				});
 			}, movementInterval);
-			simulateDriverMovementRef.current = simulateDriverMovement;
-		};
+		}
 		if (driver && walmartLocation) {
 			// console.log("yes");
 			simulateDriverMovement();
 		}
 
-		// Clean up the event listener when the component unmounts
-		// return () => {
-		// 	socket.off("driver-location-update");
-		// };
+		socket.on("driver-location-update", (updatedDriver) => {
+			// Update the driver's data
+			setDriver(updatedDriver);
+		});
+		//Clean up the event listener when the component unmounts
+		return () => {
+			socket.off("driver-location-update");
+		};
 	}, []); //
-	socket.on("driver-location-update", (updatedDriver) => {
-		// Update the driver's data
-		setDriver(updatedDriver);
-	});
 
 	useEffect(() => {
 		return () => {
@@ -210,16 +265,49 @@ const Map = () => {
 		height: "400px",
 	};
 	const handleDirectionsToWalmartResponse = (response) => {
+		//console.log(response);
 		if (response !== null) {
 			setDirectionsToWalmart(response);
 		}
 	};
 
 	const handleDirectionsToPlaceResponse = (response) => {
+		//console.log(response);
 		if (response !== null) {
 			setDirectionsToCustomer(response);
 		}
 	};
+	const directionsToWalmartService = useMemo(() => {
+		if (driver && walmartLocation) {
+			return (
+				<DirectionsService
+					options={{
+						origin: `${driver.location.latitude},${driver.location.longitude}`,
+						destination: `${walmartLocation.latitude},${walmartLocation.longitude}`,
+						travelMode: "DRIVING",
+					}}
+					callback={handleDirectionsToWalmartResponse}
+				/>
+			);
+		}
+		return null; // Return null if either `driver` or `walmartLocation` is falsy
+	}, [driver, walmartLocation]);
+
+	const directionsToCustomerService = useMemo(() => {
+		if (customerLoc && walmartLocation) {
+			return (
+				<DirectionsService
+					options={{
+						origin: `${walmartLocation.latitude},${walmartLocation.longitude}`,
+						destination: `${customerLoc.lat},${customerLoc.lng}`,
+						travelMode: "DRIVING",
+					}}
+					callback={handleDirectionsToPlaceResponse}
+				/>
+			);
+		}
+		return null;
+	}, [walmartLocation, customerLoc]);
 
 	// const center = { lat: 40.7128, lng: -74.006 };
 
@@ -262,26 +350,13 @@ const Map = () => {
 									}}
 								/>
 							)}
-							{driver && (
+							{driver && walmartLocation && (
 								<>
-									<DirectionsService
-										options={{
-											origin: `${driver.location.latitude},${driver.location.longitude}`,
-											destination: `${walmartLocation.latitude},${walmartLocation.longitude}`,
-											travelMode: "DRIVING",
-										}}
-										callback={handleDirectionsToWalmartResponse}
-									/>
-									<DirectionsService
-										options={{
-											origin: `${walmartLocation.latitude},${walmartLocation.longitude}`,
-											destination: `${customerLoc.lat},${customerLoc.lng}`,
-											travelMode: "DRIVING",
-										}}
-										callback={handleDirectionsToPlaceResponse}
-									/>
+									{directionsToWalmartService}
+									{directionsToCustomerService}
 								</>
 							)}
+
 							{directionsToWalmart && (
 								<DirectionsRenderer
 									options={{

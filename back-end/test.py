@@ -147,3 +147,51 @@ def get_directions(driver, walmart):
         "estimated_time": str(estimated_time),
         "directions": data
     }
+
+
+# @app.route("/update_driver_location", methods=["PATCH"])
+# def updateDriver():
+#     driver_id = request.json.get("id")
+#     driver_location = request.json.get("driverLocation")
+
+#     driver = Driver.query.get(driver_id).first()
+
+#     driver.location.latitude = driver_location["latitude"]
+#     driver.location.longtitude = driver_location["longitude"]
+
+#     db.session.add(driver)
+#     db.session.commit()
+
+#     return driver.to_dict()
+
+
+# def get_stores():
+#     stores = Store.query.all()
+
+#     walmartLocations = [
+#         {
+#             "name": store.name,
+#             "address": store.address,
+#             "latitude": store.latitude,
+#             "longitude": store.longitude,
+#         }
+#         for store in stores
+#     ]
+
+#     return walmartLocations
+
+
+# class Store(db.Model):
+#     __tablename__ = 'stores'
+
+#     id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String)
+#     address = db.Column(db.Text)
+#     latitude = db.Column(db.Float)
+#     longitude = db.Column(db.Float)
+
+#     def __init__(self, name, address, latitude, longitude):
+#         self.name = name
+#         self.address = address
+#         self.latitude = latitude
+#         self.longitude = longitude

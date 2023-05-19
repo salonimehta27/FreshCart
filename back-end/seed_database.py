@@ -4,7 +4,7 @@ from random import choice, randint, uniform
 from datetime import datetime
 import requests
 from flask import Flask, jsonify
-from model import connect_to_db, db, Product, Driver, Location
+from model import connect_to_db, db, Product, Driver, Location, Store
 from server import app
 from faker import Faker
 from math import radians, sin, cos, sqrt
@@ -98,5 +98,34 @@ for _ in range(num_drivers):
     db.session.add(driver)
     db.session.add(location)
 
-# Commit the changes to the database
 db.session.commit()
+
+# type = "department_store"
+# query = "Walmart"
+# location = "New York"
+# url = f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={query}+in+{location}&type={type}&key={google_api_key}"
+    
+# response = requests.get(url)
+# data = response.json()
+# walmartStores = data["results"]
+    
+# walmartLocations = [
+#         {
+#             "name": store["name"],
+#             "address": store["formatted_address"],
+#             "latitude": store["geometry"]["location"]["lat"],
+#             "longitude": store["geometry"]["location"]["lng"],
+#         }
+#         for store in walmartStores
+# ]
+# # Commit the changes to the database
+# for store_info in walmartLocations:
+#     store = Store(
+#         name=store_info['name'],
+#         address=store_info['address'],
+#         latitude=store_info['latitude'],
+#         longitude=store_info['longitude']
+#     )
+#     db.session.add(store)
+
+# db.session.commit()

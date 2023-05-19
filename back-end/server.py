@@ -12,10 +12,12 @@ import cart_f
 import stripe
 import json
 from flask_socketio import SocketIO, emit
+from flask_caching import Cache
 
 
 
 app = Flask(__name__)
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 app.app_context().push()
 app.secret_key = "dev"
 app.config['SESSION_COOKIE_SECURE'] = True
@@ -263,7 +265,8 @@ def create_payment():
         })
     except Exception as e:
         return jsonify(error=str(e)), 403
-    
+
+@cache.cached(timeout=86400) 
 def get_stores():
     type = "department_store"
     query = "Walmart"
@@ -286,10 +289,12 @@ def get_stores():
 
     return walmartLocations
 
+
 @socketio.on("driver-location-update")
 def handle_driver_location_update(data):
     # print("data", data)
-    # import pdb; pdb.set_trace()
+   
+   
     driver_id = data['id']
     latitude = data["driverLocation"]['latitude']
     longitude = data["driverLocation"]['longitude']
@@ -304,10 +309,6 @@ def handle_driver_location_update(data):
         driver_data = driver.to_dict()  # Convert the driver object to a dictionary using the to_dict() method (assuming you have defined it)
         emit('driver_location_update', driver_data, broadcast=True)  # Updated event name here
     else:
-        # Handle the case where the driver doesn't exist in the database
-        # or the driver's location is not associated with the driver model
-        # (e.g., no foreign key relationship between Driver and Location)
-        # You can raise an exception or handle it as per your application's logic.
         pass
 
 
@@ -357,21 +358,22 @@ def find_nearest_walmart(customer_lat, customer_lng):
 
 @app.route("/api/places", methods=["POST"])
 @cross_origin(supports_credentials=True)
+@cache.cached(timeout=86400, query_string=True)  # Cache the response for 1 hour
 def get_places():
     customer_id = request.json.get("customerId")
     lat = request.json.get("latitude")
     lng = request.json.get("longitude")
 
-    #directions = get_directions(find_nearest_driver(customer_id, lat, lng).to_dict(), find_nearest_walmart(lat, lng))
     existing_location = Location.query.filter_by(customer_id=customer_id, latitude=lat, longitude=lng).first()
     if existing_location:
         nearest_driver_info = find_nearest_driver(customer_id, lat, lng)
         nearest_walmart_location = find_nearest_walmart(lat, lng)
+        directions = get_directions(nearest_driver_info.to_dict(), nearest_walmart_location)
         return {
             "driver": nearest_driver_info.to_dict() if nearest_driver_info else None,
             "walmart_location": nearest_walmart_location,
-            "directions":get_directions(nearest_driver_info.to_dict(), nearest_walmart_location)["directions"],
-            "estimated_time":get_directions(nearest_driver_info.to_dict(), nearest_walmart_location)["estimated_time"]
+            "directions":directions["directions"],
+            "estimated_time":directions["estimated_time"]
         }
 
     location = Location(customer_id=customer_id, latitude=lat, longitude=lng)
@@ -380,20 +382,21 @@ def get_places():
 
     nearest_driver_info = find_nearest_driver(customer_id, lat, lng)
     nearest_walmart_location = find_nearest_walmart(lat, lng)
-
+    
     if not nearest_walmart_location:
         return {
             "error": "No Walmart locations found",
             "driver": nearest_driver_info.to_dict() if nearest_driver_info else None,
             "walmart_location": None
         }
-
+    directions = get_directions(nearest_driver_info.to_dict(), nearest_walmart_location)
     return {
-        "driver": nearest_driver_info.to_dict() if nearest_driver_info else None,
-        "walmart_location": nearest_walmart_location,
-        "directions":get_directions(nearest_driver_info.to_dict(), nearest_walmart_location)["directions"],
-        "estimated_time":get_directions(nearest_driver_info.to_dict(), nearest_walmart_location)["estimated_time"]
-    }
+            "driver": nearest_driver_info.to_dict() if nearest_driver_info else None,
+            "walmart_location": nearest_walmart_location,
+            "directions":directions["directions"],
+            "estimated_time":directions["estimated_time"]
+        }
+
 
 
 def get_directions(driver, walmart):
@@ -402,6 +405,7 @@ def get_directions(driver, walmart):
     walmart_lat = walmart["latitude"]
     walmart_lng = walmart["longitude"]
 
+   
     url = f"https://maps.googleapis.com/maps/api/directions/json?origin={driver_lat},{driver_lng}&destination={walmart_lat},{walmart_lng}&key={google_api_key}"
     response = requests.get(url)
     data = response.json()
@@ -422,20 +426,7 @@ def get_directions(driver, walmart):
     }
 
 
-# @app.route("/update_driver_location", methods=["PATCH"])
-# def updateDriver():
-#     driver_id = request.json.get("id")
-#     driver_location = request.json.get("driverLocation")
 
-#     driver = Driver.query.get(driver_id).first()
-
-#     driver.location.latitude = driver_location["latitude"]
-#     driver.location.longtitude = driver_location["longitude"]
-
-#     db.session.add(driver)
-#     db.session.commit()
-
-#     return driver.to_dict()
 if __name__ == "__main__":
     connect_to_db(app)
     socketio.run(app, host="0.0.0.0", debug=True)
