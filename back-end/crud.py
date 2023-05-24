@@ -117,7 +117,11 @@ def get_customer_by_id(id):
     customer = Customer.query.get(id)
     if customer is not None:
         return customer
-
+def get_customer_rep_by_id(id):
+    CustomerRep = CustomerRep.query.get(id)
+    if CustomerRep is not None:
+        return CustomerRep
+    
 if __name__ == '__main__':
     from server import app 
     connect_to_db(app)

@@ -174,7 +174,7 @@ class Order(db.Model):
     customer = db.relationship("Customer", back_populates="orders")
     driver = db.relationship("Driver", back_populates="orders")
     order_items = db.relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
-
+    queries = db.relationship("Query", back_populates="order")
     def to_dict(self):
         return {
             "id": self.id,
@@ -263,22 +263,42 @@ class Chat(db.Model):
     __tablename__ = "chats"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    message = db.Column(db.String(500), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False)
     customer = db.relationship("Customer", back_populates="chats")
 
-    customer_rep_id = db.Column(db.Integer, db.ForeignKey("customer_reps.id"), nullable=False)
+    customer_rep_id = db.Column(db.Integer, db.ForeignKey("customer_reps.id"), nullable=True)
     customer_rep = db.relationship("CustomerRep", back_populates="chats")
 
     query_id = db.Column(db.Integer, db.ForeignKey("queries.id"), nullable=False)
-    query = db.relationship("Query", back_populates="chats")
+    query = db.relationship("Query", back_populates="chat")
 
+    messages = db.relationship("ChatMessage", back_populates="chat", cascade="all, delete-orphan")
     def __repr__(self):
         return f"<Chat id={self.id} customer_id={self.customer_id} customer_rep_id={self.customer_rep_id} query_id={self.query_id}>"
+    
+class ChatMessage(db.Model):
+    __tablename__ = "chat_messages"
 
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    message = db.Column(db.String(500), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    chat_id = db.Column(db.Integer, db.ForeignKey("chats.id"), nullable=False)
+    chat = db.relationship("Chat", back_populates="messages")
+
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=True)
+    customer = db.relationship("Customer")
+
+    customer_rep_id = db.Column(db.Integer, db.ForeignKey("customer_reps.id"), nullable=True)
+    customer_rep = db.relationship("CustomerRep")
+
+
+    def __repr__(self):
+        return f"<ChatMessage id={self.id} chat_id={self.chat_id}>"
 class Query(db.Model):
     __tablename__ = 'queries'
 
@@ -288,16 +308,29 @@ class Query(db.Model):
     created_at = db.Column(db.TIMESTAMP, nullable=False, server_default=db.func.now())
     updated_at = db.Column(db.TIMESTAMP, nullable=False, server_default=db.func.now(), onupdate=db.func.now())
 
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
-    customer_rep_id = db.Column(db.Integer, db.ForeignKey('customer_reps.id'), nullable=False)
+    customer_rep_id = db.Column(db.Integer, db.ForeignKey('customer_reps.id'), nullable=True)
 
     # Relationship backpopulates
+    order = db.relationship('Order', back_populates="queries")
     customer = db.relationship('Customer', back_populates='queries')
     customer_rep = db.relationship('CustomerRep', back_populates='queries')
-    chats = db.relationship("Chat", back_populates="query")
+    chat = db.relationship("Chat", back_populates="query")
     def __repr__(self):
         return f'<Query id={self.id} message={self.message} is_accepted={self.is_accepted}>'
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'message': self.message,
+            'is_accepted': self.is_accepted,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'order_id': self.order_id,
+            'customer_id': self.customer_id,
+            'customer_rep_id': self.customer_rep_id
+        }
 def connect_to_db(flask_app, db_uri="postgresql:///freshcart", echo=True):
     flask_app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
     flask_app.config["SQLALCHEMY_ECHO"] = echo
@@ -312,5 +345,5 @@ if __name__ == "__main__":
     from server import app
     connect_to_db(app)
     db.create_all()
-    app.run()
+    # app.run()
   

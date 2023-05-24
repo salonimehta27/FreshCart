@@ -4,7 +4,7 @@ from random import choice, randint, uniform
 from datetime import datetime
 import requests
 from flask import Flask, jsonify
-from model import connect_to_db, db, Product, Driver, Location, Store
+from model import connect_to_db, db, Product, Driver, Location, Customer
 from server import app
 from faker import Faker
 from math import radians, sin, cos, sqrt
@@ -53,7 +53,11 @@ else:
 
 
 user = crud.create_user("test1", "last", "test1", "test1@test.com", "test", "customer")
+customer = crud.create_customer(user)
 db.session.commit()
+
+customer_rep = crud.create_user("test_rep", "last", "test_rep", "test_rep@test.com", "test", "customer_rep")
+customer_rep_save = crud.create_customer_rep(customer_rep)
 fake = Faker()
 
 num_drivers = 10
@@ -67,6 +71,7 @@ radius_miles = 7
 
 # Convert radius to degrees (approximately 1 degree = 69 miles)
 radius_degrees = radius_miles / 69.0
+car_brands = ["Toyota", "Honda", "Ford", "Chevrolet", "Volkswagen", "Nissan", "Hyundai", "Kia", "Mazda", "Subaru", "Jeep", "Dodge", "Chrysler", "Mitsubishi", "Buick"]
 
 # Generate mock driver data and store in the database
 for _ in range(num_drivers):
@@ -84,7 +89,7 @@ for _ in range(num_drivers):
 
     driver = Driver(
         name=fake.name(),
-        car_model=fake.word(),
+        car_model=choice(car_brands),
         license_plate=fake.license_plate()
     )
 

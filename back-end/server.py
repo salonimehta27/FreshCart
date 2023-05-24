@@ -1,5 +1,5 @@
 from flask import (Flask, render_template, make_response,request, flash,get_flashed_messages, session, redirect) 
-from model import connect_to_db, db, User, Customer, CustomerRep, Driver, OrderItem,Order, Product, Location
+from model import connect_to_db, db, User, Customer, CustomerRep, Driver, OrderItem,Order, Product, Location, Query, Chat, ChatMessage
 from flask_sqlalchemy import SQLAlchemy
 import requests
 from datetime import datetime
@@ -13,8 +13,13 @@ import stripe
 import json
 from flask_socketio import SocketIO, emit
 from flask_caching import Cache
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+import string
 
-
+nltk.download('punkt')
+nltk.download('stopwords')
 
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
@@ -42,7 +47,217 @@ def clear_session_cookie():
 def index():
     return render_template("index.html")
 
+def preprocess_input(user_input):
+    tokens = word_tokenize(user_input.lower())
+    stop_words = set(stopwords.words('english'))
+    tokens = [token for token in tokens if token not in stop_words and token not in string.punctuation]
+    return tokens
+
+# Define responses
+def get_response(user_input, is_connecting_to_representative):
+    if 'hi' in user_input:
+        return 'Hello! How can I assist you today?'
+    elif 'bye' in user_input:
+        return 'Goodbye!'
+    elif 'product' in user_input:
+        return 'Sure, I can help you with that. What specific product are you looking for?'
+    elif 'order' in user_input or "help" in user_input:
+        return 'To place an order, please provide your details and the product you want to purchase.'
+    elif 'representative' in user_input or "human" in user_input or "speak to representative" in user_input and not is_connecting_to_representative:
+        return 'I can connect you to a representative. Please wait a moment.'
+    elif is_connecting_to_representative:
+        # Perform necessary actions to handle representative communication
+        return 'Connecting you to a representative...'
+    else:
+        return "I'm sorry, I didn't understand that."
+# Connect to a representative
+def connect_to_representative(query):
+    # Perform necessary actions to connect the user to a representative
+    print('Chatbot: You are now connected to a representative. How may I assist you further?')
+    while True:
+        user_input = input('User: ')
+        # Handle user interaction with the representative
+        # Additional code for representative interaction goes here
+        if 'bye' in user_input:
+            print('Chatbot: Goodbye! Have a great day.')
+            break
+
+
+# Chatbot route
+@app.route("/api/chat/<customer_id>", methods=["POST"])
+def chat(customer_id):
+    user_input = request.json['user_input']
+    is_connecting_to_representative = 'representative' in user_input
+    preprocessed_input = preprocess_input(user_input)
+    response = get_response(preprocessed_input, is_connecting_to_representative)
+    
+    #import pdb; pdb.set_trace()
+    if 'representative' in user_input:
+        # Include a flag to indicate if the response prompts connecting to a representative
+        response_data = {
+            'response': response,
+            'connect_to_representative': True
+        }
+    else:
+        response_data = {
+            'response': response,
+            'connect_to_representative': False
+        }
+
+    # Check if a chat already exists in the session
+    if 'chat_messages' not in session:
+        session['chat_messages'] = []
+    
+    # Add the new chat message and the chatbot response to the session
+    session['chat_messages'].append(('User', user_input))
+    session['chat_messages'].append(('Chatbot', response))
+
+    # Check if the customer representative accepted the query
+    if is_connecting_to_representative:
+        # Create a new query and save the chat messages to the database
+        query = Query(customer_id=customer_id, customer_rep_id=None, message=user_input, is_accepted=False)
+        db.session.add(query)
+        db.session.commit()
+    
+        chat = Chat(customer_id=customer_id, query_id = query.id)
+        db.session.add(chat)
+        db.session.commit() 
+
+        for i, message in enumerate(session["chat_messages"]):
+            import pdb; pdb.set_trace()
+            if message[i][0] == "User":
+                chat_message = ChatMessage(message = message, chat_id = chat.id, customer_id=customer_id)
+                db.session.add(chat_message)
+                db.session.commit()
+            elif message[i][0] == "Chatbot": 
+                chat_message = ChatMessage(message = message, chat_id = chat.id)
+                db.session.add(chat_message)
+                db.session.commit()
+
+
+        #connect_to_representative(query)
+
+        # session['chat_messages'] = []
+    else:
+        # Add the chat messages from the session to the response data
+        response_data['chat_messages'] = session['chat_messages']
+    
+    return jsonify(response_data)
+
+@app.route("/queries")
+def get_queries():
+    active_queries = Query.query.filter_by(is_accepted = False)
+    queries = []
+
+    for query in active_queries:
+        queries.append(query.to_dict())
+
+    return jsonify(queries)
+
+@app.route("/accept-query/<id>", methods = ["PATCH"])
+def acceptQuery(id):
+    is_accepted = request.json.get("is_accepted")
+    
+    query = Query.query.get(id)
+    if (is_accepted == "true"):
+        query.is_accepted = True
+        db.session.add(query)
+        db.session.commit()
+    
+    return jsonify(query.to_dict())
+
+
+
+
+# @app.route("/api/chat/<customer_id>", methods=["POST"])
+# def chat(customer_id):
+#     user_input = request.json['user_input']
+#     is_connecting_to_representative = 'representative' in user_input
+#     preprocessed_input = preprocess_input(user_input)
+#     response = get_response(preprocessed_input, is_connecting_to_representative)
+    
+#     #import pdb; pdb.set_trace()
+#     if 'representative' in user_input:
+#         # Include a flag to indicate if the response prompts connecting to a representative
+#         response_data = {
+#             'response': response,
+#             'connect_to_representative': True
+#         }
+#     else:
+#         response_data = {
+#             'response': response,
+#             'connect_to_representative': False
+#         }
+
+#     # Check if a chat already exists in the session
+#     if 'chat_messages' not in session:
+#         session['chat_messages'] = []
+    
+#     # Add the new chat message and the chatbot response to the session
+#     session['chat_messages'].append(('User', user_input))
+#     session['chat_messages'].append(('Chatbot', response))
+
+#     # Check if the customer representative accepted the query
+#     if is_connecting_to_representative:
+#         # Create a new query and save the chat messages to the database
+#         query = Query(customer_id=customer_id, customer_rep_id=None, message=user_input, is_accepted=False)
+#         db.session.add(query)
+#         db.session.commit()
+
+#         # Retrieve the existing chat messages
+#         #chat_messages = Chat.query.filter_by(customer_id=customer_id, query=query).all()
+#         # Add the existing chat messages to the response data
+#         # response_data['chat_messages'] = [(chat.user_type, chat.message) for chat in chat_messages]
+
+#         # Save the chat messages from the session to the database
+#         for user_type, chat_message in session['chat_messages']:
+#             chat = Chat(message=chat_message, customer_id=customer_id, customer_rep_id=query.customer_rep_id, query=query, user_type=user_type)
+#             db.session.add(chat)
+        
+#         db.session.commit()
+
+#         # Clear the chat messages from the session
+#         session['chat_messages'] = []
+#     else:
+#         # Add the chat messages from the session to the response data
+#         response_data['chat_messages'] = session['chat_messages']
+    
+#     return jsonify(response_data)
 ######### LOGIN/SIGNUP/LOGOUT ###########
+@app.route("/admin-login", methods = ["POST"])
+@cross_origin(supports_credentials=True)
+def process_login_admin():
+    email = request.json.get("email")
+    password = request.json.get("password")
+
+    user = crud.get_user_by_email(email)
+    if user is not None:
+        if user.password == password:
+            session['customer_rep_id'] = user.customer_rep.id
+            return jsonify({"id":user.customer_rep.id, 
+                            "fname":user.fname,
+                            "lname":user.lname,
+                            "username":user.username,
+                            "email":user.email,})
+        else:
+            return jsonify(success=False, error="Incorrect password"), 401
+    else:
+        return jsonify(success=False, error="User not found"), 401
+
+@app.route("/admin-me")
+@cross_origin(supports_credentials=True)
+def current_customer_rep():
+    if "customer_rep_id" in session:
+        user = crud.get_customer_rep_by_id(session["customer_rep_id"])
+        if user is not None:
+           user= user.user
+           return jsonify({"id":user.id, "fname":user.fname,
+                           "lname":user.lname,
+                           "username":user.username,
+                           "email":user.email,
+                           "customer_rep_id":session["customer_rep_id"]})
+    return jsonify({"error": "User not in session"})
+
 
 @app.route("/login", methods = ["POST"])
 @cross_origin(supports_credentials=True)
@@ -51,7 +266,6 @@ def process_login():
     password = request.json.get("password")
 
     user = crud.get_user_by_email(email)
- 
     if user is not None:
         if user.password == password:
             session['user_id'] = user.customer.id
@@ -67,6 +281,10 @@ def process_login():
     else:
         return jsonify(success=False, error="User not found"), 401
 
+@app.route("/admin-logout")
+def process_admin_logout():
+    session.pop('customer_rep_id', None)
+    return jsonify(success=True)
 
 @app.route("/me")
 @cross_origin(supports_credentials=True)

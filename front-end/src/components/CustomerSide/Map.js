@@ -17,6 +17,8 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import OrderProgress from "./OrderProgress";
 import socket from "../../socket";
+import carIcon from "../CustomerSide/images/car-icon.png";
+
 const Map = () => {
 	const [customerLoc, setCustomerLoc] = useState(null);
 	const customerId = useSelector((state) => state.currentUser.entities);
@@ -166,7 +168,7 @@ const Map = () => {
 		// return () => clearTimeout(timer);
 	}, [customerId, address]);
 
-	// // console.log(driver);
+	console.log(driver);
 	// // console.log(customerLoc);
 	// // console.log(walmartLocation);
 	// // console.log(directions);
@@ -241,7 +243,7 @@ const Map = () => {
 			}, movementInterval);
 		}
 		if (driver && walmartLocation) {
-			// console.log("yes");
+			console.log("yes");
 			simulateDriverMovement();
 		}
 
@@ -340,6 +342,10 @@ const Map = () => {
 										lat: parseFloat(driver.location.latitude),
 										lng: parseFloat(driver.location.longitude),
 									}}
+									icon={{
+										url: carIcon,
+										scaledSize: new window.google.maps.Size(40, 40),
+									}}
 								/>
 							)}
 							{walmartLocation && walmartLocation.name && (
@@ -392,6 +398,7 @@ const Map = () => {
 					store={`${walmartLocation.name}`}
 					storeAddress={`${walmartLocation.address}`}
 					estimatedTime={estimatedTime}
+					driverName={driver.name}
 				/>
 			)}
 		</div>

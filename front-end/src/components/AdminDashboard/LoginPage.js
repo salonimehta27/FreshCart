@@ -1,14 +1,39 @@
 import React, { useState } from "react";
+import { currentRepAdded } from "./AdminSlice";
+import { useDispatch } from "react-redux";
 
-function LoginPage({ onLogin }) {
-	const [username, setUsername] = useState("");
+function LoginPage() {
+	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
-
+	const dispatch = useDispatch();
 	const handleSubmit = (e) => {
 		e.preventDefault();
+		const formData = {
+			email: email,
+			password: password,
+		};
+
+		fetch("http://localhost:5000/admin-login", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(formData),
+		})
+			.then((response) => response.json())
+			.then((data) => {
+				// Handle the response data here
+				console.log(data);
+				dispatch(currentRepAdded(data));
+			})
+			.catch((error) => {
+				// Handle any errors here
+				console.error(error);
+			});
+		setEmail("");
+		setPassword("");
 		// Perform authentication logic here, then call onLogin with user object
-		const user = { username };
-		onLogin(user);
+		// const user = { username };
 	};
 
 	return (
@@ -16,11 +41,11 @@ function LoginPage({ onLogin }) {
 			<h2>Login</h2>
 			<form onSubmit={handleSubmit}>
 				<label>
-					Username:
+					Email:
 					<input
-						type="text"
-						value={username}
-						onChange={(e) => setUsername(e.target.value)}
+						type="email"
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
 					/>
 				</label>
 				<label>

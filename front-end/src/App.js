@@ -1,6 +1,12 @@
 import React, { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+	BrowserRouter as Router,
+	Routes,
+	Route,
+	useSearchParams,
+} from "react-router-dom";
 import Navbar from "./components/CustomerSide/Navbar";
+import AdminNavbar from "./components/AdminDashboard/AdminNavbar";
 import Home from "./components/CustomerSide/Home";
 import Product from "./components/CustomerSide/Product";
 import ProductDetails from "./components/CustomerSide/ProductDetails";
@@ -13,15 +19,22 @@ import {
 	cartItemsAdded,
 	cartItemsCleared,
 } from "./components/CustomerSide/cartsSlice";
+import { currentRepAdded } from "./components/AdminDashboard/AdminSlice";
 import Cart from "./components/CustomerSide/Cart";
 import Container from "react-bootstrap/Container";
 import AddressForm from "./components/CustomerSide/AddressForm";
 import PaymentForm from "./components/CustomerSide/PaymentForm";
 import OrderSuccess from "./components/CustomerSide/OrderSuccess";
+import Chatbot from "./components/CustomerSide/Chatbot";
+import LoginPage from "./components/AdminDashboard/LoginPage";
+import CustomerQueries from "./components/AdminDashboard/CustomerQueries";
+
 function App() {
 	const dispatch = useDispatch();
 	const currentUser = useSelector((state) => state.currentUser.entities);
 	const cartItems = useSelector((state) => state.carts.items);
+	const currentrep = useSelector((state) => state.currentRep.entities);
+	console.log(currentUser);
 	useEffect(() => {
 		fetch("http://localhost:5000/me", {
 			credentials: "include",
@@ -30,27 +43,48 @@ function App() {
 			.then((user) => {
 				dispatch(currentUserAdded(user));
 			});
+		fetch("http://localhost:5000/admin-me", {
+			credentials: "include",
+		})
+			.then((res) => res.json())
+			.then((user) => {
+				dispatch(currentRepAdded(user));
+			});
 	}, []);
-	// console.log(cartItems);
+
+	const isOnAdminRoute = window.location.pathname.startsWith("/admin");
+
 	return (
 		<Router>
 			<div className="App">
-				<Navbar currentUser={currentUser} />
+				{isOnAdminRoute ? (
+					<AdminNavbar current_rep={currentrep} />
+				) : (
+					<Navbar currentUser={currentUser} />
+				)}
 				<Routes>
 					<Route exact path="/" element={<Home />} />
 					<Route path="/products" element={<Product />} />
 					<Route path="/products/:id" element={<ProductDetails />} />
 					<Route exact path="/signup" element={<SignupForm />} />
 					<Route exact path="/login" element={<LoginForm />} />
-					<Route path="/admin" element={<AdminDashboard />} />
-					<Route exact path="/cart" element={<Cart cart={cartItems} />} />
-					<Route exact path="/shipping" element={<AddressForm />} />
+					<Route path="/cart" element={<Cart cart={cartItems} />} />
+					<Route path="/shipping" element={<AddressForm />} />
 					<Route
 						path="/payment"
 						element={<PaymentForm cartItems={cartItems.cart_products} />}
 					/>
 					<Route path="/order_success" element={<OrderSuccess />} />
+					<Route
+						path="/admin/*"
+						element={<AdminDashboard current_rep={currentrep} />}
+					/>
+					<Route path="/admin-login" element={<LoginPage />} />
+					<Route path="/admin-queries" element={<CustomerQueries />} />
 				</Routes>
+				{currentUser !== null &&
+					currentUser !== undefined &&
+					!currentUser.error && <Chatbot />}
 			</div>
 		</Router>
 	);

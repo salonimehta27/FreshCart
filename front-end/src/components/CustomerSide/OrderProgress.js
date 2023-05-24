@@ -7,6 +7,7 @@ const OrderProgress = ({
 	store,
 	storeAddress,
 	estimatedTime,
+	driverName,
 }) => {
 	return (
 		<div className="container mt-5">
@@ -39,6 +40,12 @@ const OrderProgress = ({
 						<div className="col">
 							<h5>Estimated Delivery Time:</h5>
 							<p>{estimatedTime}</p>
+						</div>
+					</div>
+					<div className="row">
+						<div className="col">
+							<h5>Driver Name:</h5>
+							<p>{driverName}</p>
 						</div>
 					</div>
 				</div>
