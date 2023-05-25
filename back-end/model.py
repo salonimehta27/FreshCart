@@ -273,11 +273,13 @@ class Chat(db.Model):
     customer_rep = db.relationship("CustomerRep", back_populates="chats")
 
     query_id = db.Column(db.Integer, db.ForeignKey("queries.id"), nullable=False)
-    query = db.relationship("Query", back_populates="chat")
+    query_obj = db.relationship("Query", back_populates="chat")
 
     messages = db.relationship("ChatMessage", back_populates="chat", cascade="all, delete-orphan")
+
+
     def __repr__(self):
-        return f"<Chat id={self.id} customer_id={self.customer_id} customer_rep_id={self.customer_rep_id} query_id={self.query_id}>"
+        return f"<Chat id={self.id}>"
     
 class ChatMessage(db.Model):
     __tablename__ = "chat_messages"
@@ -299,6 +301,17 @@ class ChatMessage(db.Model):
 
     def __repr__(self):
         return f"<ChatMessage id={self.id} chat_id={self.chat_id}>"
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "message": self.message,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+            "chat_id": self.chat_id,
+            "customer_id": self.customer_id,
+            "customer_rep_id": self.customer_rep_id
+        }
 class Query(db.Model):
     __tablename__ = 'queries'
 
@@ -316,7 +329,7 @@ class Query(db.Model):
     order = db.relationship('Order', back_populates="queries")
     customer = db.relationship('Customer', back_populates='queries')
     customer_rep = db.relationship('CustomerRep', back_populates='queries')
-    chat = db.relationship("Chat", back_populates="query")
+    chat = db.relationship("Chat", back_populates="query_obj")
     def __repr__(self):
         return f'<Query id={self.id} message={self.message} is_accepted={self.is_accepted}>'
 

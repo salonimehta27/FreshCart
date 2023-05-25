@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from "react";
 import CustomerQueryItem from "./CustomerQueryItem";
+import { useSelector } from "react-redux";
 
 function CustomerQueries() {
 	const [queries, setQueries] = useState([]);
+	const currentrep = useSelector((state) => state.currentRep.entities);
+	const [showChatBox, setShowChatBox] = useState(false);
 
+	function handleClick(val) {
+		// Update the showChatBox state
+		setShowChatBox(() => val);
+
+		// Rest of your code
+	}
 	useEffect(() => {
 		fetch("http://localhost:5000/queries")
 			.then((response) => response.json())
@@ -15,13 +24,16 @@ function CustomerQueries() {
 		<div>
 			<h2>Customer Queries</h2>
 
-			{queries !== undefined && !queries && queries.length > 0 ? (
+			{queries ? (
 				queries.map((query) => (
 					<CustomerQueryItem
 						key={query.id}
 						query={query}
 						queries={queries}
 						setQueries={setQueries}
+						currentRep={currentrep}
+						showChatBox={showChatBox}
+						handleShowClick={handleClick}
 					/>
 				))
 			) : (

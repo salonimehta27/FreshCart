@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
 	BrowserRouter as Router,
 	Routes,
@@ -28,13 +28,17 @@ import OrderSuccess from "./components/CustomerSide/OrderSuccess";
 import Chatbot from "./components/CustomerSide/Chatbot";
 import LoginPage from "./components/AdminDashboard/LoginPage";
 import CustomerQueries from "./components/AdminDashboard/CustomerQueries";
+import { loadChatMessages, addChatMessage } from "./chatSlice";
+import AdminChatbot from "./components/AdminDashboard/AdminChatbot";
 
 function App() {
 	const dispatch = useDispatch();
 	const currentUser = useSelector((state) => state.currentUser.entities);
 	const cartItems = useSelector((state) => state.carts.items);
 	const currentrep = useSelector((state) => state.currentRep.entities);
-	console.log(currentUser);
+	//const [chatLog, setChatLog] = useState([]);
+	const chatLog = useSelector((state) => state.chat.messages);
+	//console.log(currentUser);
 	useEffect(() => {
 		fetch("http://localhost:5000/me", {
 			credentials: "include",
@@ -50,7 +54,24 @@ function App() {
 			.then((user) => {
 				dispatch(currentRepAdded(user));
 			});
+		fetch("http://localhost:5000/get_chat", {
+			credentials: "include",
+		})
+			.then((res) => res.json())
+			.then((data) => dispatch(loadChatMessages(data)));
+		// fetch("http://localhost:5000/get_chat", {
+		// 	credentials: "include",
+		// })
+		// 	.then((res) => res.json())
+		// 	.then((data) => {
+		// 		// Dispatch the addChatMessage action for each received chat message
+		// 		data.forEach((entry) => {
+		// 			dispatch(addChatMessage(entry.sender, entry.message));
+		// 		});
+		// 	});
 	}, []);
+
+	console.log(chatLog);
 
 	const isOnAdminRoute = window.location.pathname.startsWith("/admin");
 
@@ -85,6 +106,8 @@ function App() {
 				{currentUser !== null &&
 					currentUser !== undefined &&
 					!currentUser.error && <Chatbot />}
+
+				{currentrep !== null && currentrep !== undefined && <AdminChatbot />}
 			</div>
 		</Router>
 	);

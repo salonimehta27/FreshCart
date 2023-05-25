@@ -3,12 +3,16 @@ import productsReducer from "./components/CustomerSide/productsSlice";
 import currentUserReducer from "./components/CustomerSide/loginSlice";
 import cartsReducer from "./components/CustomerSide/cartsSlice";
 import currentRepReducer from "./components/AdminDashboard/AdminSlice";
+import chatReducer from "./chatSlice";
+import adminChatReducer from "./components/AdminDashboard/adminChatSlice";
 const store = configureStore({
 	reducer: {
 		products: productsReducer,
 		currentUser: currentUserReducer,
 		carts: cartsReducer,
 		currentRep: currentRepReducer,
+		chat: chatReducer,
+		adminChat: adminChatReducer,
 	},
 });
 export default store;
