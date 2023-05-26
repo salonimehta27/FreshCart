@@ -3,6 +3,7 @@ import "./chatbot.css";
 import { useSelector, useDispatch } from "react-redux";
 import { loadChatMessages, addChatMessage } from "../../chatSlice";
 import socket from "../../socket";
+import { setChatId } from "../AdminDashboard/adminChatSlice";
 
 const Chatbot = () => {
 	const [isChatOpen, setChatOpen] = useState(false);
@@ -12,43 +13,22 @@ const Chatbot = () => {
 	const dispatch = useDispatch();
 
 	useEffect(() => {
-		socket.on("message", (data) => {
+		socket.on("customer_rep_message", (data) => {
 			const { sender, message } = data;
-
-			if (sender === "Customer_rep") {
-				// Dispatch the addChatMessage action with the received data from the representative
-				dispatch(addChatMessage(sender, message));
-			} else {
-				// Handle other senders (User, Chatbot) as before
-				dispatch(addChatMessage(sender, message));
-			}
+			dispatch(addChatMessage(sender, message));
 		});
 
 		return () => {
-			socket.disconnect();
+			socket.off("customer_rep_message");
 		};
 	}, []);
-
-	// useEffect(() => {
-	// 	socket.on("message", (data) => {
-	// 		// Extract the sender and message from the received data
-	// 		const { sender, message } = data;
-
-	// 		// Dispatch the addChatMessage action with the received data
-	// 		dispatch(addChatMessage(sender, message));
-	// 	});
-	// 	// Cleanup the socket connection on component unmount
-	// 	return () => {
-	// 		socket.disconnect();
-	// 	};
-	// }, []);
 
 	const toggleChat = () => {
 		setChatOpen(!isChatOpen);
 	};
 
 	const sendMessage = () => {
-		console.log(message);
+		// console.log(message);
 		if (message.trim() !== "") {
 			socket.emit("message", { sender: "User", message });
 
@@ -64,6 +44,7 @@ const Chatbot = () => {
 				.then((data) => {
 					console.log(data);
 					dispatch(loadChatMessages(data.chat_messages));
+					dispatch(setChatId(data.chat_id));
 				})
 				.catch((error) => {
 					console.error(error);

@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-	BrowserRouter as Router,
-	Routes,
-	Route,
-	useSearchParams,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/CustomerSide/Navbar";
 import AdminNavbar from "./components/AdminDashboard/AdminNavbar";
 import Home from "./components/CustomerSide/Home";
@@ -15,10 +10,6 @@ import LoginForm from "./components/CustomerSide/LoginForm";
 import AdminDashboard from "./components/AdminDashboard/AdminDashboard";
 import { useDispatch, useSelector } from "react-redux";
 import { currentUserAdded } from "./components/CustomerSide/loginSlice";
-import {
-	cartItemsAdded,
-	cartItemsCleared,
-} from "./components/CustomerSide/cartsSlice";
 import { currentRepAdded } from "./components/AdminDashboard/AdminSlice";
 import Cart from "./components/CustomerSide/Cart";
 import Container from "react-bootstrap/Container";
@@ -44,36 +35,22 @@ function App() {
 			credentials: "include",
 		})
 			.then((res) => res.json())
-			.then((user) => {
-				dispatch(currentUserAdded(user));
-			});
+			.then((user) => dispatch(currentUserAdded(user)));
 		fetch("http://localhost:5000/admin-me", {
 			credentials: "include",
 		})
 			.then((res) => res.json())
-			.then((user) => {
-				dispatch(currentRepAdded(user));
-			});
+			.then((user) => dispatch(currentRepAdded(user)));
+
 		fetch("http://localhost:5000/get_chat", {
 			credentials: "include",
 		})
 			.then((res) => res.json())
 			.then((data) => dispatch(loadChatMessages(data)));
-		// fetch("http://localhost:5000/get_chat", {
-		// 	credentials: "include",
-		// })
-		// 	.then((res) => res.json())
-		// 	.then((data) => {
-		// 		// Dispatch the addChatMessage action for each received chat message
-		// 		data.forEach((entry) => {
-		// 			dispatch(addChatMessage(entry.sender, entry.message));
-		// 		});
-		// 	});
 	}, []);
 
-	console.log(chatLog);
-
 	const isOnAdminRoute = window.location.pathname.startsWith("/admin");
+	console.log(currentrep);
 
 	return (
 		<Router>
@@ -107,7 +84,7 @@ function App() {
 					currentUser !== undefined &&
 					!currentUser.error && <Chatbot />}
 
-				{currentrep !== null && currentrep !== undefined && <AdminChatbot />}
+				{/* {currentrep !== null && currentrep !== undefined && <AdminChatbot />} */}
 			</div>
 		</Router>
 	);

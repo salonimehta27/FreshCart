@@ -4,6 +4,7 @@ const adminChatSlice = createSlice({
 	name: "adminChat",
 	initialState: {
 		messages: [],
+		chat_id: 0,
 	},
 	reducers: {
 		loadAdminChatMessages: (state, action) => {
@@ -13,10 +14,13 @@ const adminChatSlice = createSlice({
 		addAdminChatMessage: (state, action) => {
 			state.messages.push(action.payload);
 		},
+		setChatId(state, action) {
+			state.chat_id = action.payload;
+		},
 	},
 });
 
-export const { loadAdminChatMessages, addAdminChatMessage } =
+export const { loadAdminChatMessages, setChatId, addAdminChatMessage } =
 	adminChatSlice.actions;
 
 export default adminChatSlice.reducer;

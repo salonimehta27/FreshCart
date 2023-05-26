@@ -15,6 +15,7 @@ function LoginPage() {
 
 		fetch("http://localhost:5000/admin-login", {
 			method: "POST",
+			credentials: "include",
 			headers: {
 				"Content-Type": "application/json",
 			},

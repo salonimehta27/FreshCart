@@ -170,3 +170,75 @@ function updateDriverLocation(driverId, driverLocation) {
 								</>
 							)} */
 }
+
+// function handleClick(id) {
+// 	console.log(currentRep);
+
+// 	const acceptQueryRequest = fetch(
+// 		`http://localhost:5000/accept-query/${id}`,
+// 		{
+// 			method: "PATCH",
+// 			credentials: "include",
+// 			headers: {
+// 				"Content-Type": "application/json",
+// 			},
+// 			body: JSON.stringify({
+// 				is_accepted: true,
+// 				customer_rep_id: currentRep.customer_rep_id,
+// 			}),
+// 		}
+// 	).then((r) => r.json());
+
+// 	const getChatMessagesRequest = fetch(
+// 		`http://localhost:5000/get_chat_messages/${id}`,
+// 		{
+// 			credentials: "include",
+// 		}
+// 	).then((r) => r.json());
+
+// 	Promise.all([acceptQueryRequest, getChatMessagesRequest]).then(
+// 		([acceptQueryData, chatMessagesData]) => {
+// 			setQueries((prevQueries) => {
+// 				const updatedQueries = prevQueries.filter(
+// 					(q) => q.id !== acceptQueryData.id
+// 				);
+// 				return updatedQueries;
+// 			});
+// 			setShowChatBox(true);
+// 			dispatch(loadAdminChatMessages(chatMessagesData));
+// 			setChatMessages(chatMessagesData);
+// 		}
+// 	);
+// }
+
+// useEffect(() => {
+// 	socket.on("message", (data) => {
+// 		// Extract the sender and message from the received data
+// 		const { sender, message } = data;
+
+// 		// Dispatch the addChatMessage action with the received data
+// 		dispatch(addChatMessage(sender, message));
+// 	});
+// 	// Cleanup the socket connection on component unmount
+// 	return () => {
+// 		socket.disconnect();
+// 	};
+// }, []);
+
+useEffect(() => {
+	socket.on("message", (data) => {
+		const { sender, message } = data;
+
+		if (sender === "Customer_rep") {
+			// Dispatch the addChatMessage action with the received data from the representative
+			dispatch(addChatMessage(sender, message));
+		} else {
+			// Handle other senders (User, Chatbot) as before
+			dispatch(addChatMessage(sender, message));
+		}
+	});
+
+	return () => {
+		socket.disconnect();
+	};
+}, []);
