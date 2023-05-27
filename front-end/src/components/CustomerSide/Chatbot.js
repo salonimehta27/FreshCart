@@ -10,16 +10,34 @@ const Chatbot = () => {
 	const [message, setMessage] = useState("");
 	const currentUser = useSelector((state) => state.currentUser.entities);
 	const chatLog = useSelector((state) => state.chat.messages);
+	const [customerRepActive, setCustomerRepActive] = useState(false);
+	const [roomId, setRoomId] = useState(null);
 	const dispatch = useDispatch();
 
 	useEffect(() => {
-		socket.on("customer_rep_message", (data) => {
-			const { sender, message } = data;
-			dispatch(addChatMessage(sender, message));
+		socket.on("customer_rep_response", (data) => {
+			dispatch(addChatMessage(data));
 		});
 
 		return () => {
-			socket.off("customer_rep_message");
+			// Clean up the event listener when the component unmounts
+			if (socket) {
+				socket.off("customer_rep_response");
+			}
+		};
+	}, []);
+
+	useEffect(() => {
+		socket.on("chatbot_response", (data) => {
+			dispatch(addChatMessage(data));
+			// Handle the response as needed
+		});
+
+		return () => {
+			// Clean up the event listener when the component unmounts
+			if (socket) {
+				socket.off("chatbot_response");
+			}
 		};
 	}, []);
 
@@ -28,30 +46,69 @@ const Chatbot = () => {
 	};
 
 	const sendMessage = () => {
-		// console.log(message);
 		if (message.trim() !== "") {
-			socket.emit("message", { sender: "User", message });
+			if (customerRepActive) {
+				const payload = {
+					sender: "User",
+					message: message,
+					roomId: roomId, // Include the roomId in the payload
+					customerId: currentUser.customer_id,
+				};
+				dispatch(addChatMessage({ sender: "User", message: message }));
+				socket.emit("customer_response", payload);
+				setMessage("");
+			} else {
+				if (message.toLowerCase().includes("representative")) {
+					dispatch(addChatMessage({ sender: "User", message: message }));
+					setCustomerRepActive(true);
+					fetch(`http://localhost:5000/post_query/${currentUser.customer_id}`, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({ user_input: message }),
+						credentials: "include",
+					})
+						.then((response) => response.json())
+						.then((data) => {
+							//console.log(data);
+							dispatch(addChatMessage(data.message));
+							// dispatch(loadChatMessages(data.chat_messages));
+							dispatch(setChatId(data.chatId));
+							setRoomId(data.chatId);
+						})
+						.catch((error) => {
+							console.error(error);
+						});
 
-			fetch(`http://localhost:5000/api/chat/${currentUser.customer_id}`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ user_input: message }),
-				credentials: "include",
-			})
-				.then((response) => response.json())
-				.then((data) => {
-					console.log(data);
-					dispatch(loadChatMessages(data.chat_messages));
-					dispatch(setChatId(data.chat_id));
-				})
-				.catch((error) => {
-					console.error(error);
-				});
+					// 		setMessage("");
+				} else {
+					dispatch(addChatMessage({ sender: "User", message: message }));
+					socket.emit("user_message", { message }); // Send the message to the chatbot
 
-			// 		setMessage("");
-			setMessage("");
+					fetch(`http://localhost:5000/api/chat/${currentUser.customer_id}`, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({ user_input: message }),
+						credentials: "include",
+					})
+						.then((response) => response.json())
+						.then((data) => {
+							console.log(data);
+							// dispatch(loadChatMessages(data.chat_messages));
+							// dispatch(setChatId(data.chat_id));
+						})
+						.catch((error) => {
+							console.error(error);
+						});
+
+					// 		setMessage("");
+				}
+
+				setMessage(""); // Clear the message input field
+			}
 		}
 	};
 

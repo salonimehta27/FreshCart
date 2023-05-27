@@ -30,7 +30,7 @@ app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'
 CORS(app,supports_credentials=True)
-socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000")
+socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000", manage_session=True)
 os.system("source secrets.sh")
 api_key = os.environ['API_KEY']
 stripe.api_key= os.environ['STRIPE_API_KEY']
@@ -55,7 +55,7 @@ def preprocess_input(user_input):
     return tokens
 
 # Define responses
-def get_response(user_input, is_connecting_to_representative):
+def get_response(user_input):
     if 'hi' in user_input:
         return 'Hello! How can I assist you today?'
     elif 'bye' in user_input:
@@ -63,12 +63,11 @@ def get_response(user_input, is_connecting_to_representative):
     elif 'product' in user_input:
         return 'Sure, I can help you with that. What specific product are you looking for?'
     elif 'order' in user_input or "help" in user_input:
-        return 'To place an order, please provide your details and the product you want to purchase.'
-    elif 'representative' in user_input or "human" in user_input or "speak to representative" in user_input and not is_connecting_to_representative:
+        return 'How can I assist you with the order?'
+    elif 'cancel' in user_input:
+        return "To assist you with the cancellation, would you like me to connect you with representative?"
+    elif 'representative' in user_input or "human" in user_input or "speak to representative" in user_input:
         return 'I can connect you to a representative. Please wait a moment.'
-    # elif is_connecting_to_representative:
-    #     # Perform necessary actions to handle representative communication
-    #     return connect_to_representative(user_input)
     else:
         return "I'm sorry, I didn't understand that."
 
@@ -77,351 +76,28 @@ def get_response(user_input, is_connecting_to_representative):
 def handle_disconnect():
     print('Client disconnected')
 
-# @app.route("/api/chat/<customer_id>", methods=["POST"])
-# @cross_origin(supports_credentials=True)
-# def chat(customer_id):
-#     user_input = request.json['user_input']
-#     preprocessed_input = preprocess_input(user_input)
-#     response = get_response(preprocessed_input, False)
-
-#     if 'representative' in user_input:
-#         # Include a flag to indicate if the response prompts connecting to a representative
-#         response_data = {
-#             'response': response,
-#             'connect_to_representative': True
-#         }
-#     else:
-#         response_data = {
-#             'response': response,
-#             'connect_to_representative': False
-#         }
-
-#     # Check if a chat already exists in the session
-#     if 'chat_messages' not in session:
-#        session['chat_messages'] = []
-#     session['chat_messages'].append({'sender': 'User', 'message': user_input})
-#     session['chat_messages'].append({'sender': 'Chatbot', 'message': response})
-#     session.modified = True
-#     if 'chat_id' not in session:
-#         session['chat_id'] = None
-
-#     chat_id = session['chat_id']
-#     if chat_id is None:
-#         # First time user or user reached the route without an active chat
-#         response_data['chat_messages'] = session.get('chat_messages', [])
-#         session['chat_messages'] = []  # Clear chat messages in session
-#     else:
-#         # Chat exists, retrieve messages from the database
-#         chat = Chat.query.get(chat_id)
-#         if chat is not None:
-#             messages = []
-#             chat_messages = ChatMessage.query.filter_by(chat_id=chat.id).all()
-#             for message in chat_messages:
-#                 if message.customer_id is None and message.customer_rep_id is None:
-#                     messages.append({'sender': 'Chatbot', 'message': message.message})
-#                 elif message.customer_id:
-#                     messages.append({'sender': 'User', 'message': message.message})
-#                 elif message.customer_rep_id:
-#                     messages.append({'sender': 'Customer_rep', 'message': message.message})
-#             response_data['chat_messages'] = messages
-
-#     is_connecting_to_representative = 'representative' in user_input
-#     if is_connecting_to_representative and chat_id is None:
-#         # Create a new query and save the chat messages to the database
-#         query = Query(customer_id=customer_id, customer_rep_id=None, message=user_input, is_accepted=False)
-#         db.session.add(query)
-#         db.session.commit()
-
-#         chat = Chat(customer_id=customer_id, query_id=query.id)
-#         db.session.add(chat)
-#         db.session.commit()
-
-#         session['chat_id'] = chat.id
-#         session.modified = True
-
-#         # Add user message to the chat
-#         chat_message = ChatMessage(message=user_input, chat_id=chat.id, customer_id=customer_id)
-#         db.session.add(chat_message)
-#         db.session.commit()
-
-#         # Add bot response to the chat
-#         bot_response = get_response(preprocess_input(user_input), True)
-#         bot_message = ChatMessage(message=bot_response, chat_id=chat.id)
-#         db.session.add(bot_message)
-#         db.session.commit()
-
-#         # Append bot response to the response_data
-#         response_data['chat_messages'].append({'sender': 'Chatbot', 'message': bot_response})
-
-#     chat_id = session.get("chat_id", None)
-#     if chat_id and is_connecting_to_representative:
-#         get_chat = Chat.query.get(chat_id)
-#         get_query = Query.query.get(get_chat.query_id)
-#         if get_query.customer_rep_id:
-#             @socketio.on("customer_rep_message")
-#             def handle_customer_rep_message(data):
-#                 # Handle the message received from the customer representative
-#                 message = data.get("message")
-#                 chat_id = data.get("chat_id")
-#                 customer_rep_id = data.get("customer_rep_id")
-#                 customer_rep_message = ChatMessage(message=message, chat_id=chat.id, customer_rep_id=customer_rep_id)
-#                 db.session.add(customer_rep_message)
-#                 db.session.commit()
-
-#                 # Perform any necessary operations with the message (e.g., save to the database)
-#                 # Emit the message to the appropriate chat
-#                 emit("chat_message", {"sender": "Customer_rep", "message": message}, room=chat_id)
-
-#     chat_id = session.get("chat_id", None)
-#     if chat_id:
-#         get_chat = Chat.query.get(chat_id)
-#         get_query = Query.query.get(get_chat.query_id)
-#         if get_query.customer_rep_id:
-#             # If a representative is assigned, omit the bot response from the response data
-#             response_data.pop('response', None)
-
-#     response_data['chat_messages'] = session["chat_messages"]
-#     return jsonify(response_data)
-
-
-# @app.route("/api/chat/<customer_id>", methods=["POST"])
-# @cross_origin(supports_credentials=True)
-# def chat(customer_id):
-#     user_input = request.json['user_input']
-#     preprocessed_input = preprocess_input(user_input)
-#     response = get_response(preprocessed_input, False)
-
-#     if 'representative' in user_input:
-#         # Include a flag to indicate if the response prompts connecting to a representative
-#         response_data = {
-#             'response': response,
-#             'connect_to_representative': True
-#         }
-#     else:
-#         response_data = {
-#             'response': response,
-#             'connect_to_representative': False
-#         }
-
-#     # Check if a chat already exists in the session
-#     if 'chat_messages' not in session:
-#         session['chat_messages'] = []
-
-#     is_connecting_to_representative = 'representative' in user_input
-#     # Add the new chat message and the chatbot response to the session
-#     session['chat_messages'].append({'sender': 'User', 'message': user_input})
-#     session['chat_messages'].append({'sender': 'Chatbot', 'message': response})
-#     session.modified = True
-
-#     # Get the existing chat based on the session chat_id
-#     chat_id = session.get("chat_id")
-#     if chat_id is not None:
-#         chat = Chat.query.get(chat_id)
-#         if chat is not None:
-#             # Add the user message to the existing chat
-#             chat_message = ChatMessage(message=user_input, chat_id=chat.id, customer_id=customer_id)
-#             db.session.add(chat_message)
-#             db.session.commit()
-
-#             # Generate bot response
-#             preprocessed_message = preprocess_input(user_input)
-#             bot_response = get_response(preprocessed_message, True)
-
-#             # Add the bot response to the chat
-#             bot_message = ChatMessage(message=bot_response, chat_id=chat.id)
-#             db.session.add(bot_message)
-#             db.session.commit()
-
-#             # Append the bot response to the response_data
-#             response_data['chat_messages'].append({'sender': 'Chatbot', 'message': bot_response})
-
-#             if 'customer_rep_id' in get_chat:
-#                 @socketio.on("customer_rep_message")
-#                 def handle_customer_rep_message(data):
-#                     # Handle the message received from the customer representative
-#                     message = data.get("message")
-#                     chat_id = data.get("chat_id")
-#                     customer_rep_id = data.get("customer_rep_id")
-#                     customer_rep_message = ChatMessage(message=message, chat_id=chat.id, customer_rep_id = customer_rep_id)
-#                     db.session.add(customer_rep_message)
-#                     db.session.commit()
-#                     # Perform any necessary operations with the message (e.g., save to the database)
-#                     # Emit the message to the appropriate chat
-#                     emit("chat_message", {"sender": "Customer_rep", "message": message}, room=chat_id)
-
-#     chat_id = session.get("chat_id", None)
-#     if chat_id:
-#         get_chat = Chat.query.get(chat_id)
-#         get_query = Query.query.get(get_chat.query_id)
-#         if get_query.customer_rep_id:
-#             # If a representative is assigned, omit the bot response from the response data
-#             response_data.pop('response', None)
-
-#     response_data['chat_messages'] = session["chat_messages"]
-#     return jsonify(response_data)
-
-
-# @app.route("/api/chat/<customer_id>", methods=["POST"])
-# @cross_origin(supports_credentials=True)
-# def chat(customer_id):
-#     user_input = request.json['user_input']
-#     preprocessed_input = preprocess_input(user_input)
-#     response = get_response(preprocessed_input, False)
-
-#     if 'representative' in user_input:
-#         # Include a flag to indicate if the response prompts connecting to a representative
-#         response_data = {
-#             'response': response,
-#             'connect_to_representative': True
-#         }
-#     else:
-#         response_data = {
-#             'response': response,
-#             'connect_to_representative': False
-#         }
-
-#     # Check if a chat already exists in the session
-#     if 'chat_messages' not in session:
-#         session['chat_messages'] = []
-
-#     is_connecting_to_representative = 'representative' in user_input
-#     # Add the new chat message and the chatbot response to the session
-#     session['chat_messages'].append({'sender': 'User', 'message': user_input})
-#     session['chat_messages'].append({'sender': 'Chatbot', 'message': response})
-#     session.modified = True
-
-#     # Check if the customer representative accepted the query
-#     if is_connecting_to_representative:
-#         # Create a new query and save the chat messages to the database
-#         query = Query(customer_id=customer_id, customer_rep_id=None, message=user_input, is_accepted=False)
-#         db.session.add(query)
-#         db.session.commit()
-
-#         chat = Chat(customer_id=customer_id, query_id=query.id)
-#         db.session.add(chat)
-#         db.session.commit()
-
-#         session["chat_id"] = chat.id
-#         session.modified = True
-#         for message in session["chat_messages"]:
-#             if message['sender'] == 'User':
-#                 chat_message = ChatMessage(message=message['message'], chat_id=chat.id, customer_id=customer_id)
-#                 db.session.add(chat_message)
-#                 db.session.commit()
-#             elif message['sender'] == 'Chatbot':
-#                 chat_message = ChatMessage(message=message['message'], chat_id=chat.id)
-#                 db.session.add(chat_message)
-#                 db.session.commit()
-
-#         session['chat_messages'] = []
-#         session.modified = True
-#         messages = []
-#         chat_messages = ChatMessage.query.filter_by(chat_id=chat.id).all()
-
-#         for message in chat_messages:
-#             if message.customer_id is None and message.customer_rep_id is None:
-#                 messages.append({'sender': 'Chatbot', 'message': message.message})
-#             elif message.customer_id:
-#                 messages.append({'sender': 'User', 'message': message.message})
-#             elif message.customer_rep_id:
-#                 messages.append({'sender': 'Customer_rep', 'message': message.message})
-
-#         response_data['chat_messages'] = messages
-#     else:
-#         # Get the existing chat based on the session chat_id
-#         chat_id = session.get("chat_id")
-#         if chat_id is not None:
-#             chat = Chat.query.get(chat_id)
-#             if chat is not None:
-#                 # Add the user message to the existing chat
-#                 chat_message = ChatMessage(message=user_input, chat_id=chat.id, customer_id=customer_id)
-#                 db.session.add(chat_message)
-#                 db.session.commit()
-
-#                 # Generate bot response
-#                 preprocessed_message = preprocess_input(user_input)
-#                 bot_response = get_response(preprocessed_message, True)
-
-#                 # Add the bot response to the chat
-#                 bot_message = ChatMessage(message=bot_response, chat_id=chat.id)
-#                 db.session.add(bot_message)
-#                 db.session.commit()
-
-#                 # Append the bot response to the response_data
-#                 response_data['chat_messages'].append({'sender': 'Chatbot', 'message': bot_response})
-
-#     chat_id = session.get("chat_id", None)
-#     if chat_id:
-#         get_chat = Chat.query.get(chat_id)
-#         get_query = Query.query.get(get_chat.query_id)
-#         if get_query.customer_rep_id:
-
-#             @socketio.on("customer_rep_message")
-#             def handle_customer_rep_message(data):
-#             # Handle the message received from the customer representative
-#                 message = data.get("message")
-#                 chat_id = data.get("chat_id")
-
-#             # Perform any necessary operations with the message (e.g., save to the database)
-#                 customer_rep_id = data.get("customer_rep_id")
-#                 customer_rep_message = ChatMessage(message=message, chat_id=chat.id, customer_rep_id=customer_rep_id)
-#                 db.session.add(customer_rep_message)
-#                 db.session.commit()
-#             # Emit the message to the appropriate chat
-#                 emit("chat_message", {"sender": "Customer_rep", "message": message}, room=chat_id)
-#                 response_data.pop('response', None)
-#             return jsonify(response_data)
-#             # If a representative is assigned, omit the bot response from the response data
-#     else:
-#         response_data['chat_messages'] = session["chat_messages"]
-#         return jsonify(response_data)
-
-        # Add the chat messages
-
-@app.route("/api/chat/<customer_id>", methods=["POST"])
-@cross_origin(supports_credentials=True)
-@socketio.on("customer_rep_message")
-def chat(customer_id):
-    user_input = request.json['user_input']
-    preprocessed_input = preprocess_input(user_input)
-    response = get_response(preprocessed_input, False)
-
-    if 'representative' in user_input:
-        # Include a flag to indicate if the response prompts connecting to a representative
-        response_data = {
-            'response': response,
-            'connect_to_representative': True
-        }
-    else:
-        response_data = {
-            'response': response,
-            'connect_to_representative': False
-        }
-
-    # Check if a chat already exists in the session
-    if 'chat_messages' not in session:
-        session['chat_messages'] = []
-
-    is_connecting_to_representative = 'representative' in user_input
-    # Add the new chat message and the chatbot response to the session
-    session['chat_messages'].append({'sender': 'User', 'message': user_input})
-    session['chat_messages'].append({'sender': 'Chatbot', 'message': response})
+@socketio.on('user_message')
+def handle_user_message(data):
+    message = data['message']
+    # Generate chatbot response
+    preprocessed_input = preprocess_input(message)
+    response = get_response(preprocessed_input)
     session.modified = True
+    #import pdb; pdb.set_trace()
+    emit('chatbot_response', {'sender': 'Chatbot', 'message': response})
 
-    # Check if the customer representative accepted the query
-    if is_connecting_to_representative:
-        # Create a new query and save the chat messages to the database
-        query = Query(customer_id=customer_id, customer_rep_id=None, message=user_input, is_accepted=False)
+#@socketio.on('accept_query')
+@app.route("/post_query/<customer_id>", methods=["POST"])
+def handle_accept_query(customer_id):
+    message = request.json['user_input']
+    if "representative" in message.lower():
+        query = Query(customer_id=customer_id, customer_rep_id=None, message=message, is_accepted=False)
         db.session.add(query)
         db.session.commit()
-
         chat = Chat(customer_id=customer_id, query_id=query.id)
         db.session.add(chat)
         db.session.commit()
-
-        session["chat_id"] = chat.id
-        response_data["chat_id"] = chat.id
-        session.modified = True
+        #import pdb; pdb.set_trace()
         for message in session["chat_messages"]:
             if message['sender'] == 'User':
                 chat_message = ChatMessage(message=message['message'], chat_id=chat.id, customer_id=customer_id)
@@ -430,9 +106,8 @@ def chat(customer_id):
                 chat_message = ChatMessage(message=message['message'], chat_id=chat.id)
                 db.session.add(chat_message)
         db.session.commit()
-
-        session['chat_messages'] = []
-        session.modified = True
+        session["chat_messages"] = []
+        session["chat_id"] = chat.id
         messages = []
         chat_messages = ChatMessage.query.filter_by(chat_id=chat.id).all()
 
@@ -443,57 +118,23 @@ def chat(customer_id):
                 messages.append({'sender': 'User', 'message': message.message})
             elif message.customer_rep_id:
                 messages.append({'sender': 'Customer_rep', 'message': message.message})
+        response = {"sender":"Chatbot", "message":"I can connect you to a representative. Please wait a moment and don't refresh the page"}
 
-        response_data['chat_messages'] = messages
-    else:
-        # Get the existing chat based on the session chat_id
-        chat_id = session.get("chat_id")
-        if chat_id is not None:
-            chat = Chat.query.get(chat_id)
-            if chat is not None:
-                # Add the user message to the existing chat
-                chat_message = ChatMessage(message=user_input, chat_id=chat.id, customer_id=customer_id)
-                db.session.add(chat_message)
-                db.session.commit()
+        return jsonify({"chatId" : session["chat_id"], "message": response})
 
-                # Generate bot response
-                preprocessed_message = preprocess_input(user_input)
-                bot_response = get_response(preprocessed_message, True)
+@app.route("/api/chat/<customer_id>", methods=["POST"])
+def chat(customer_id):
+    message = request.json['user_input']
+    # Generate chatbot response
+    preprocessed_input = preprocess_input(message)
+    response = get_response(preprocessed_input)
+    if 'chat_messages' not in session:
+        session['chat_messages'] = []
+    session['chat_messages'].append({'sender': 'User', 'message': message})
+    session['chat_messages'].append({'sender': 'Chatbot', 'message': response})
+    session.modified = True
 
-                # Add the bot response to the chat
-                bot_message = ChatMessage(message=bot_response, chat_id=chat.id)
-                db.session.add(bot_message)
-                db.session.commit()
-
-                response_data['chat_messages'].append({'sender': 'Chatbot', 'message': bot_response})
-
-    chat_id = session.get("chat_id", None)
-    if chat_id:
-        get_chat = Chat.query.get(chat_id)
-        get_query = Query.query.get(get_chat.query_id)
-        if get_query.customer_rep_id:
-
-            # @socketio.on("customer_rep_message")
-            # def handle_customer_rep_message(data):
-            #     # Handle the message received from the customer representative
-            #     message = data.get("message")
-            #     chat_id = data.get("chat_id")
-
-            #     # Perform any necessary operations with the message (e.g., save to the database)
-            #     customer_rep_id = data.get("customer_rep_id")
-            #     customer_rep_message = ChatMessage(message=message, chat_id=chat.id, customer_rep_id=customer_rep_id)
-            #     db.session.add(customer_rep_message)
-            #     db.session.commit()
-
-            #     # Emit the message to the appropriate chat
-            #     emit("chat_message", {"sender": "Customer_rep", "message": message}, room=chat_id)
-
-            # If a representative is assigned, omit the bot response from the response data
-            response_data.pop('response', None)
-    else:
-        response_data['chat_messages'] = session["chat_messages"]
-
-    return jsonify(response_data)
+    return jsonify(session["chat_messages"])
 
 @socketio.on("customer_rep_message")
 def handle_customer_rep_message(data):
@@ -508,7 +149,19 @@ def handle_customer_rep_message(data):
     db.session.commit()
 
                 # Emit the message to the appropriate chat
-    emit("chat_message", {"sender": "Customer_rep", "message": message}, room=chat_id)
+    emit("customer_rep_response", {"sender": "Customer_rep", "message": message}, broadcast = True)
+
+@socketio.on("customer_response")
+def handle_customer_response(data):
+    sender = "User"
+    message = data["message"]
+    roomId = data["roomId"]
+    customer_id = data["customerId"]
+
+    chat_message = ChatMessage(message=message, chat_id=roomId, customer_id = customer_id)
+    db.session.add(chat_message)
+    db.session.commit()
+    emit("customer_resp", {"sender": sender, "message": message}, broadcast = True)
 
 
 @socketio.on("connect_customer_rep")
@@ -559,8 +212,8 @@ def get_chat():
     else:
         # No chat messages found
         messages = []
-
-    return jsonify(messages)
+    chat_id = session.get("chat_id", None)
+    return jsonify({"messages": messages, "chatId": chat_id})
 
 
 def get_chat_messages(query_id):
@@ -603,7 +256,7 @@ def accept_query(id):
     is_accepted = request.json.get("is_accepted")
     customer_rep_id = request.json.get("customer_rep_id")
     query_obj= Query.query.get(id)
-    # import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     chat = Chat.query.filter_by(query_id=query_obj.id).first()
     messages = get_chat_messages(query_obj.id)
     if is_accepted:
@@ -671,6 +324,7 @@ def process_login():
     if user is not None:
         if user.password == password:
             session['user_id'] = user.customer.id
+            # session['chat_messages'] = []
             print("process login", session["user_id"])
             cart_f.merge_guest_cart() # Merge the guest cart with the user's cart, if applicable
             return jsonify({"id":user.customer.id, 

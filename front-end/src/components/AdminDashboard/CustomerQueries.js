@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import CustomerQueryItem from "./CustomerQueryItem";
 import Chatbox from "./Chatbox";
 import { currentRepAdded } from "./AdminSlice";
+import socket from "../../socket";
 
 import { useSelector, useDispatch } from "react-redux";
 function CustomerQueries() {
@@ -18,6 +19,15 @@ function CustomerQueries() {
 		setChatId(chatId);
 		// Rest of your code
 	}
+	useEffect(() => {
+		// Listen for incoming chat messages
+
+		socket.on("customer query", (data) => {
+			console.log(data);
+			setQueries([...queries, data]);
+			// Handle the response as needed
+		});
+	}, []);
 	useEffect(() => {
 		fetch("http://localhost:5000/admin-me", {
 			credentials: "include",

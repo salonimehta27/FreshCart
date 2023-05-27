@@ -21,6 +21,7 @@ import LoginPage from "./components/AdminDashboard/LoginPage";
 import CustomerQueries from "./components/AdminDashboard/CustomerQueries";
 import { loadChatMessages, addChatMessage } from "./chatSlice";
 import AdminChatbot from "./components/AdminDashboard/AdminChatbot";
+import { setChatId } from "./components/AdminDashboard/adminChatSlice";
 
 function App() {
 	const dispatch = useDispatch();
@@ -46,11 +47,14 @@ function App() {
 			credentials: "include",
 		})
 			.then((res) => res.json())
-			.then((data) => dispatch(loadChatMessages(data)));
+			.then((data) => {
+				dispatch(setChatId(data.chatId));
+				dispatch(loadChatMessages(data.messages));
+			});
 	}, []);
 
 	const isOnAdminRoute = window.location.pathname.startsWith("/admin");
-	console.log(currentrep);
+	// console.log(currentrep);
 
 	return (
 		<Router>

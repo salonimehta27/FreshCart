@@ -25,8 +25,8 @@ function LoginForm() {
 				dispatch(currentUserAdded(data));
 				setEmail("");
 				setPassword("");
+				navigate("/");
 			});
-		navigate("/");
 	};
 	// console.log(currentUser);
 

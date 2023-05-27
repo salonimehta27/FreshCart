@@ -4,6 +4,7 @@ const chatSlice = createSlice({
 	name: "chat",
 	initialState: {
 		messages: [],
+		chatId: null,
 	},
 	reducers: {
 		loadChatMessages: (state, action) => {
@@ -12,6 +13,9 @@ const chatSlice = createSlice({
 
 		addChatMessage: (state, action) => {
 			state.messages.push(action.payload);
+		},
+		setChatId(state, action) {
+			state.chatId = action.payload;
 		},
 	},
 });
