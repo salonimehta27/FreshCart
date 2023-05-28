@@ -1,6 +1,11 @@
 /*global google*/
-import React, { useEffect, useMemo, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, {
+	useState,
+	useEffect,
+	useRef,
+	useCallback,
+	useMemo,
+} from "react";
 import {
 	GoogleMap,
 	Marker,
@@ -9,29 +14,21 @@ import {
 	DirectionsService,
 } from "@react-google-maps/api";
 import axios from "axios";
+import { useSelector } from "react-redux";
 import OrderProgress from "./OrderProgress";
 import socket from "../../socket";
 import carIcon from "../CustomerSide/images/car-icon.png";
-import {
-	setWalmartLocation,
-	setDriver,
-	setCustomerLocation,
-	setEstimatedTime,
-	setDirections,
-} from "./mapSlice";
 
 const Map = () => {
+	const [customerLoc, setCustomerLoc] = useState(null);
 	const customerId = useSelector((state) => state.currentUser.entities);
 	const address = useSelector((state) => state.currentUser.address);
-	const driver = useSelector((state) => state.map.driver);
-	const walmartLocation = useSelector((state) => state.map.walmartLocation);
-	const estimatedTime = useSelector((state) => state.map.estimatedTime);
-	const directions = useSelector((state) => state.map.directions);
-	const customerLoc = useSelector((state) => state.map.customerLocation);
+	const [driver, setDriver] = useState(null);
+	const [walmartLocation, setWalmartLocation] = useState(null);
+	const [estimatedTime, setEstimatedTime] = useState(null);
+	const [directions, setDirections] = useState(null);
 	const [directionsToWalmart, setDirectionsToWalmart] = useState(null);
 	const [directionsToCustomer, setDirectionsToCustomer] = useState(null);
-	const [showMarker, setShowMarker] = useState(false);
-	const dispatch = useDispatch();
 	const { isLoaded } = useLoadScript({
 		googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
 	});
@@ -118,12 +115,13 @@ const Map = () => {
 	function toDegrees(radians) {
 		return radians * (180 / Math.PI);
 	}
+
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
 				const cacheKey = "geocodeResponse";
 				let geocodeResponse = getCachedData(cacheKey);
-				//console.log(geocodeResponse);
+				console.log(geocodeResponse);
 				if (!geocodeResponse) {
 					console.log("google maps got touched");
 					geocodeResponse = await axios.get(
@@ -136,7 +134,7 @@ const Map = () => {
 
 				if (results.length > 0) {
 					const { lat, lng } = results[0].geometry.location;
-					dispatch(setCustomerLocation({ lat, lng }));
+					setCustomerLoc({ lat, lng });
 
 					if (customerId) {
 						const infoResponse = await axios.post(
@@ -147,110 +145,127 @@ const Map = () => {
 								longitude: lng,
 							}
 						);
-						dispatch(setWalmartLocation(infoResponse.data.walmart_location));
-						dispatch(setDriver(infoResponse.data.driver));
-						dispatch(setDirections(infoResponse.data.directions));
-						dispatch(setEstimatedTime(infoResponse.data.estimated_time));
-						setShowMarker(true);
+
+						setDriver(infoResponse.data.driver);
+						setDirections(infoResponse.data.directions);
+						setWalmartLocation(infoResponse.data.walmart_location);
+						setEstimatedTime(infoResponse.data.estimated_time);
 					}
 				}
 			} catch (error) {
 				console.error("Error:", error);
 			}
 		};
+		// const delay = 2000;
+		// let timer;
 
 		if (customerId) {
+			// timer = setTimeout(() => {
 			fetchData();
+			// }, delay);
 		}
+
+		// return () => clearTimeout(timer);
 	}, [customerId, address]);
-	if (showMarker) {
-		simulateDriverMovement();
-	}
-	function simulateDriverMovement() {
-		console.log("simulate");
-		const movementThreshold = 0.1;
-		const movementSpeed = 2;
-		const movementInterval = 10000;
 
-		let driverLocation = {
-			latitude: driver.location.latitude,
-			longitude: driver.location.longitude,
-		};
+	console.log(driver);
+	// // console.log(customerLoc);
+	// // console.log(walmartLocation);
+	// // console.log(directions);
+	useEffect(() => {
+		// Listen for the "driver_update" event
+		function simulateDriverMovement() {
+			console.log("simulate");
+			const movementThreshold = 0.1;
+			const movementSpeed = 2;
+			const movementInterval = 10000;
 
-		const walmartLocationn = {
-			latitude: walmartLocation.latitude,
-			longitude: walmartLocation.longitude,
-		};
+			let driverLocation = {
+				latitude: driver.location.latitude,
+				longitude: driver.location.longitude,
+			};
 
-		const customerLocation = {
-			latitude: customerLoc.lat,
-			longitude: customerLoc.lng,
-		};
+			const walmartLocationn = {
+				latitude: walmartLocation.latitude,
+				longitude: walmartLocation.longitude,
+			};
 
-		let currentStage = 0;
+			const customerLocation = {
+				latitude: customerLoc.lat,
+				longitude: customerLoc.lng,
+			};
 
-		setInterval(() => {
-			let targetLocation;
-			if (currentStage === 0) {
-				targetLocation = walmartLocationn;
-			} else if (currentStage === 1) {
-				targetLocation = customerLocation;
-			}
+			let currentStage = 0;
 
-			const distance = calculateDistance(
-				driverLocation.latitude,
-				driverLocation.longitude,
-				targetLocation.latitude,
-				targetLocation.longitude
-			);
-
-			if (distance <= movementThreshold) {
+			setInterval(() => {
+				let targetLocation;
 				if (currentStage === 0) {
-					// Reached Walmart location precisely, move to the next stage
-					currentStage = 1;
-				} else {
-					// Reached customer location, stop the interval
-					return;
+					targetLocation = walmartLocationn;
+				} else if (currentStage === 1) {
+					targetLocation = customerLocation;
 				}
-			}
-			driverLocation = moveTowards(
-				driverLocation,
-				targetLocation,
-				movementSpeed
-			);
 
-			dispatch(
+				const distance = calculateDistance(
+					driverLocation.latitude,
+					driverLocation.longitude,
+					targetLocation.latitude,
+					targetLocation.longitude
+				);
+
+				if (distance <= movementThreshold) {
+					if (currentStage === 0) {
+						// Reached Walmart location precisely, move to the next stage
+						currentStage = 1;
+					} else {
+						// Reached customer location, stop the interval
+						return;
+					}
+				}
+				driverLocation = moveTowards(
+					driverLocation,
+					targetLocation,
+					movementSpeed
+				);
+
 				setDriver((prevDriver) => ({
 					...prevDriver,
 					location: {
 						longitude: driverLocation.longitude,
 						latitude: driverLocation.latitude,
 					},
-				}))
-			);
+				}));
+				// console.log(driver.location);
+				// Emit the updated driver location to the server via websockets
+				socket.emit("driver-location-update", {
+					id: driver.id,
+					driverLocation,
+				});
+			}, movementInterval);
+		}
+		if (driver && walmartLocation) {
+			console.log("yes");
+			simulateDriverMovement();
+		}
 
-			// Emit the updated driver location to the server via websockets
-			socket.emit("driver-location-update", {
-				id: driver.id,
-				driverLocation,
-			});
-		}, movementInterval);
-	}
+		socket.on("driver-location-update", (updatedDriver) => {
+			// Update the driver's data
+			setDriver(updatedDriver);
+		});
+		//Clean up the event listener when the component unmounts
+		return () => {
+			socket.off("driver-location-update");
+		};
+	}, []); //
 
+	useEffect(() => {
+		return () => {
+			socket.off("driver-location-update");
+		};
+	}, []);
 	const containerStyle = {
 		width: "400px",
 		height: "400px",
 	};
-
-	useEffect(() => {
-		socket.on("driver-location-updated", (updatedDriver) => {
-			console.log("updated", updatedDriver);
-			dispatch(setDriver(updatedDriver));
-		});
-		return () => {
-			socket.off("driver-location-updated");
-		};
-	}, []);
 	const handleDirectionsToWalmartResponse = (response) => {
 		//console.log(response);
 		if (response !== null) {
@@ -277,16 +292,16 @@ const Map = () => {
 				/>
 			);
 		}
-		return null;
+		return null; // Return null if either `driver` or `walmartLocation` is falsy
 	}, [driver, walmartLocation]);
 
 	const directionsToCustomerService = useMemo(() => {
-		if (walmartLocation) {
+		if (customerLoc && walmartLocation) {
 			return (
 				<DirectionsService
 					options={{
 						origin: `${walmartLocation.latitude},${walmartLocation.longitude}`,
-						destination: `${address.line1}, ${address.city}, ${address.state}, ${address.postal_code}, ${address.country}`,
+						destination: `${customerLoc.lat},${customerLoc.lng}`,
 						travelMode: "DRIVING",
 					}}
 					callback={handleDirectionsToPlaceResponse}
@@ -294,12 +309,14 @@ const Map = () => {
 			);
 		}
 		return null;
-	}, [walmartLocation, address]);
-	console.log(showMarker);
-	console.log(customerLoc);
-	console.log(walmartLocation);
-	console.log(directions);
-	console.log(driver);
+	}, [walmartLocation, customerLoc]);
+
+	// const center = { lat: 40.7128, lng: -74.006 };
+
+	// console.log("driver", driver);
+	// console.log("walmartLocation", walmartLocation);
+	// console.log(estimatedTime);
+
 	const onLoad = (map) => {
 		const bounds = new google.maps.LatLngBounds();
 
@@ -314,15 +331,12 @@ const Map = () => {
 				<h1>Loading...</h1>
 			) : (
 				<>
-					<GoogleMap mapContainerStyle={containerStyle} onLoad={onLoad}>
-						{showMarker && (
-							<>
-								<Marker
-									position={{
-										lat: parseFloat(customerLoc.lat),
-										lng: parseFloat(customerLoc.lng),
-									}}
-								/>
+					{customerLoc && (
+						<GoogleMap mapContainerStyle={containerStyle} onLoad={onLoad}>
+							<Marker
+								position={{ lat: customerLoc.lat, lng: customerLoc.lng }}
+							/>
+							{driver && driver.location && driver.name && (
 								<Marker
 									position={{
 										lat: parseFloat(driver.location.latitude),
@@ -333,41 +347,48 @@ const Map = () => {
 										scaledSize: new window.google.maps.Size(40, 40),
 									}}
 								/>
+							)}
+							{walmartLocation && walmartLocation.name && (
 								<Marker
 									position={{
 										lat: parseFloat(walmartLocation.latitude),
 										lng: parseFloat(walmartLocation.longitude),
 									}}
 								/>
-							</>
-						)}
-						{directionsToWalmartService}
-						{directionsToCustomerService}
-						{directionsToWalmart && (
-							<DirectionsRenderer
-								options={{
-									directions: directionsToWalmart,
-									suppressMarkers: true,
-									polylineOptions: {
-										strokeColor: "blue",
-										strokeWeight: 4,
-									},
-								}}
-							/>
-						)}
-						{directionsToCustomer && (
-							<DirectionsRenderer
-								options={{
-									directions: directionsToCustomer,
-									suppressMarkers: true,
-									polylineOptions: {
-										strokeColor: "red",
-										strokeWeight: 4,
-									},
-								}}
-							/>
-						)}
-					</GoogleMap>
+							)}
+							{driver && walmartLocation && (
+								<>
+									{directionsToWalmartService}
+									{directionsToCustomerService}
+								</>
+							)}
+
+							{directionsToWalmart && (
+								<DirectionsRenderer
+									options={{
+										directions: directionsToWalmart,
+										suppressMarkers: true,
+										polylineOptions: {
+											strokeColor: "blue",
+											strokeWeight: 4,
+										},
+									}}
+								/>
+							)}
+							{directionsToCustomer && (
+								<DirectionsRenderer
+									options={{
+										directions: directionsToCustomer,
+										suppressMarkers: true,
+										polylineOptions: {
+											strokeColor: "red",
+											strokeWeight: 4,
+										},
+									}}
+								/>
+							)}
+						</GoogleMap>
+					)}
 				</>
 			)}
 			{driver && walmartLocation && (
@@ -383,5 +404,4 @@ const Map = () => {
 		</div>
 	);
 };
-
 export default Map;

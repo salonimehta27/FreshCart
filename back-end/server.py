@@ -569,7 +569,7 @@ def get_stores():
 @socketio.on("driver-location-update")
 def handle_driver_location_update(data):
     # print("data", data)
-   
+    # import pdb; pdb.set_trace()
    
     driver_id = data['id']
     latitude = data["driverLocation"]['latitude']
@@ -580,10 +580,11 @@ def handle_driver_location_update(data):
         # Update the driver's location
         driver.location.latitude = latitude
         driver.location.longitude = longitude
+        db.session.add(driver)
         db.session.commit()
         
         driver_data = driver.to_dict()  # Convert the driver object to a dictionary using the to_dict() method (assuming you have defined it)
-        emit('driver_location_update', driver_data, broadcast=True)  # Updated event name here
+        emit('driver_location_updated', driver_data, broadcast=True)  # Updated event name here
     else:
         pass
 
