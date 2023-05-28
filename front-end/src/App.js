@@ -54,7 +54,7 @@ function App() {
 	}, []);
 
 	const isOnAdminRoute = window.location.pathname.startsWith("/admin");
-	// console.log(currentrep);
+	//console.log(currentrep);
 
 	return (
 		<Router>

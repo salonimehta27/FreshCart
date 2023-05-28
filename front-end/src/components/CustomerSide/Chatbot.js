@@ -14,13 +14,28 @@ const Chatbot = () => {
 	const [roomId, setRoomId] = useState(null);
 	const dispatch = useDispatch();
 
+	// useEffect(() => {
+	// 	socket.on("customer_rep_response", (data) => {
+	// 		console.log(data);
+	// 		dispatch(addChatMessage(data));
+	// 	});
+
+	// 	return () => {
+	// 		// Clean up the event listener when the component unmounts
+	// 		if (socket) {
+	// 			socket.off("customer_rep_response");
+	// 		}
+	// 	};
+	// }, []);
 	useEffect(() => {
 		socket.on("customer_rep_response", (data) => {
-			dispatch(addChatMessage(data));
+			const currentChatId = roomId;
+			if (data.sender === "Customer_rep" && data.roomId === currentChatId) {
+				dispatch(addChatMessage(data));
+			}
 		});
 
 		return () => {
-			// Clean up the event listener when the component unmounts
 			if (socket) {
 				socket.off("customer_rep_response");
 			}

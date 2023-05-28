@@ -149,7 +149,7 @@ def handle_customer_rep_message(data):
     db.session.commit()
 
                 # Emit the message to the appropriate chat
-    emit("customer_rep_response", {"sender": "Customer_rep", "message": message}, broadcast = True)
+    emit("customer_rep_response", {"sender": "Customer_rep", "message": message, "roomId": chat_id}, broadcast = True)
 
 @socketio.on("customer_response")
 def handle_customer_response(data):
@@ -161,7 +161,7 @@ def handle_customer_response(data):
     chat_message = ChatMessage(message=message, chat_id=roomId, customer_id = customer_id)
     db.session.add(chat_message)
     db.session.commit()
-    emit("customer_resp", {"sender": sender, "message": message}, broadcast = True)
+    emit("customer_resp", {"sender": sender, "message": message, "roomId": roomId}, broadcast = True)
 
 
 @socketio.on("connect_customer_rep")

@@ -8,19 +8,13 @@ function Chatbox({ chatId, currentrep }) {
 	const [messageInput, setMessageInput] = useState("");
 	//const currentRep = useSelector((state) => state.currentRep.entities);
 	const dispatch = useDispatch();
-	// function handleIncomingMessage(message) {
-	// 	// Handle incoming chat messages
-	// 	// Add the new message to the chatMessages state
-	// 	//setChatMessages((prevMessages) => [...prevMessages, message]);
-	// 	dispatch(addAdminChatMessage(message));
-	// }
-	// console.log(currentrep);
-	// console.log(chatId);
 	useEffect(() => {
 		// Listen for incoming chat messages
 
 		socket.on("customer_resp", (data) => {
-			dispatch(addAdminChatMessage(data));
+			if (data.sender === "User" && data.roomId === chatId) {
+				dispatch(addAdminChatMessage(data));
+			}
 		});
 
 		return () => {
