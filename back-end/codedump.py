@@ -877,3 +877,65 @@ def get_directions(driver, walmart):
 #         response_data['chat_messages'] = session["chat_messages"]
 
 #     return jsonify(response_data)
+
+# @app.route("/api/places", methods=["POST"])
+# @cross_origin(supports_credentials=True)
+# @cache.cached(timeout=86400, query_string=True)  # Cache the response for 1 hour
+# def get_places():
+#     customer_id = request.json.get("customerId")
+#     lat = request.json.get("latitude")
+#     lng = request.json.get("longitude")
+
+#     existing_location = Location.query.filter_by(customer_id=customer_id, latitude=lat, longitude=lng).first()
+#     if existing_location:
+#         nearest_driver_info = find_nearest_driver(customer_id, lat, lng)
+#         nearest_walmart_location = find_nearest_walmart(lat, lng)
+#         directions_to_walmart = get_directions(nearest_driver_info.to_dict(), nearest_walmart_location)
+
+#         if nearest_driver_info.directions_to_customer:
+#             directions_to_customer = nearest_driver_info.directions_to_customer
+#         else:
+#             directions_to_customer = get_directions(nearest_walmart_location, {
+#                 "location": {
+#                     "latitude": lat,
+#                     "longitude": lng
+#                 }
+#             })
+
+#             nearest_driver_info.directions_to_customer = directions_to_customer
+#             db.session.add(nearest_driver_info)
+#             db.session.commit()
+
+#         directions = {
+#             "to_walmart": directions_to_walmart["directions"],
+#             "to_customer": directions_to_customer["directions"],
+#             "estimated_time": directions_to_walmart["estimated_time"] + directions_to_customer["estimated_time"]
+#         }
+
+#         return {
+#             "driver": nearest_driver_info.to_dict() if nearest_driver_info else None,
+#             "walmart_location": nearest_walmart_location,
+#             "directions": directions,
+#             "estimated_time": directions["estimated_time"]
+#         }
+
+#     location = Location(customer_id=customer_id, latitude=lat, longitude=lng)
+#     db.session.add(location)
+#     db.session.commit()
+
+#     nearest_driver_info = find_nearest_driver(customer_id, lat, lng)
+#     nearest_walmart_location = find_nearest_walmart(lat, lng)
+    
+#     if not nearest_walmart_location:
+#         return {
+#             "error": "No Walmart locations found",
+#             "driver": nearest_driver_info.to_dict() if nearest_driver_info else None,
+#             "walmart_location": None
+#         }
+#     directions = get_directions(nearest_driver_info.to_dict(), nearest_walmart_location)
+#     return {
+#         "driver": nearest_driver_info.to_dict() if nearest_driver_info else None,
+#         "walmart_location": nearest_walmart_location,
+#         "directions": directions["directions"],
+#         "estimated_time": directions["estimated_time"]
+#     }

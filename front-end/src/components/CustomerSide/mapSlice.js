@@ -22,6 +22,10 @@ const mapSlice = createSlice({
 		setDriver: (state, action) => {
 			state.driver = action.payload;
 		},
+		updateDriverLocation: (state, action) => {
+			state.driver.location = action.payload;
+		},
+
 		setWalmartLocation: (state, action) => {
 			state.walmartLocation = action.payload;
 		},
@@ -48,6 +52,7 @@ export const {
 	setDirections,
 	setDirectionsToCustomer,
 	setDirectionsToWalmart,
+	updateDriverLocation,
 } = mapSlice.actions;
 
 export default mapSlice.reducer;

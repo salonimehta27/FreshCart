@@ -67,7 +67,7 @@ central_latitude = 40.748817
 central_longitude = -73.985428
 
 # Radius in miles
-radius_miles = 7
+radius_miles = 8
 
 # Convert radius to degrees (approximately 1 degree = 69 miles)
 radius_degrees = radius_miles / 69.0
@@ -104,33 +104,3 @@ for _ in range(num_drivers):
     db.session.add(location)
 
 db.session.commit()
-
-# type = "department_store"
-# query = "Walmart"
-# location = "New York"
-# url = f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={query}+in+{location}&type={type}&key={google_api_key}"
-    
-# response = requests.get(url)
-# data = response.json()
-# walmartStores = data["results"]
-    
-# walmartLocations = [
-#         {
-#             "name": store["name"],
-#             "address": store["formatted_address"],
-#             "latitude": store["geometry"]["location"]["lat"],
-#             "longitude": store["geometry"]["location"]["lng"],
-#         }
-#         for store in walmartStores
-# ]
-# # Commit the changes to the database
-# for store_info in walmartLocations:
-#     store = Store(
-#         name=store_info['name'],
-#         address=store_info['address'],
-#         latitude=store_info['latitude'],
-#         longitude=store_info['longitude']
-#     )
-#     db.session.add(store)
-
-# db.session.commit()

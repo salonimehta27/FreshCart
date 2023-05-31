@@ -81,6 +81,15 @@ class Driver(db.Model):
         for location in self.location:
             locations.append({"latitude": location.latitude, "longitude": location.longitude})
         return locations[0]
+    # def get_location(self):
+    #     locations = []
+    #     for location in self.location:
+    #         locations.append({
+    #             "latitude": str(location.latitude),
+    #             "longitude": str(location.longitude)
+    #         })
+    #     return locations[0] if locations else {}
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -93,7 +102,7 @@ class Driver(db.Model):
             }
     }
     def __repr__(self):
-        return f'<Driver id={self.id} fname={self.user.name} car_model={self.car_model}>'
+        return f'<Driver id={self.id} car_model={self.car_model}>'
 
 class Location(db.Model):
     __tablename__ = 'locations'
@@ -170,11 +179,12 @@ class Order(db.Model):
     driver_id = db.Column(db.Integer, db.ForeignKey("drivers.id", ondelete="CASCADE"), nullable=True)
     latitude = db.Column(db.Numeric, nullable=True)
     longitude = db.Column(db.Numeric, nullable=True)
-
+    order_status = db.Column(db.String)
     customer = db.relationship("Customer", back_populates="orders")
     driver = db.relationship("Driver", back_populates="orders")
     order_items = db.relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
     queries = db.relationship("Query", back_populates="order")
+   
     def to_dict(self):
         return {
             "id": self.id,

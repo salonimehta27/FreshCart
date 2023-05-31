@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import Map from "./Map";
+import MapComponent from "./MapComponent";
 import { useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 function OrderSuccess() {
@@ -13,7 +13,7 @@ function OrderSuccess() {
 				We are connecting you with the nearest driver. They will contact you
 				shortly to confirm your delivery details.
 			</p>
-			<Map address={address} />
+			<MapComponent address={address} />
 		</div>
 	);
 }
