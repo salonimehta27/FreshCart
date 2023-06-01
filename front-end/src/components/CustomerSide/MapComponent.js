@@ -26,6 +26,7 @@ import {
 	// setDirectionsToWalmart,
 } from "./mapSlice";
 import { renderToString } from "react-dom/server";
+import { setOrder } from "./orderSlice";
 
 const MapComponent = () => {
 	const customerId = useSelector((state) => state.currentUser.entities);
@@ -39,15 +40,13 @@ const MapComponent = () => {
 	const [directionsToCustomer, setDirectionsToCustomer] = useState(null);
 	const [reachedCustomer, setReachedCustomer] = useState(false);
 	const [reachedWalmart, setReachedWalmart] = useState(false);
-
-	// const directionsToCustomer = useSelector(
-	// 	(state) => state.map.directionsToCustomer
-	// );
-	// const directionsToWalmart = useSelector(
-	// 	(state) => state.map.directionsToWalmart
-	// );
 	const [showMarker, setShowMarker] = useState(false);
+	const orderValue = localStorage.getItem("order");
+	const order = JSON.parse(orderValue);
+	console.log(order);
+	// console.log(order);
 	const dispatch = useDispatch();
+
 	const { isLoaded } = useLoadScript({
 		googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
 	});
@@ -90,12 +89,8 @@ const MapComponent = () => {
 			fetchData();
 		}
 	}, [customerId, address]);
-	// console.log(walmartLocation);
-	// console.log(estimatedTime);
-	// console.log(driver);
-	// console.log(directionsToCustomer);
-	// console.log(directionsToWalmart);
-	console.log(customerLoc);
+
+	// console.log(customerLoc);
 	const containerStyle = {
 		width: "400px",
 		height: "400px",
@@ -198,7 +193,12 @@ const MapComponent = () => {
 	useEffect(() => {
 		let currentStepIndex = 0; // Initial step index is 0
 
-		if (directionsToWalmart && reachedCustomer === false) {
+		if (
+			directionsToWalmart &&
+			reachedCustomer === false &&
+			order &&
+			order.order_status === null
+		) {
 			const timer = setInterval(() => {
 				const currentStep =
 					directionsToWalmart.routes[0].legs[0].steps[currentStepIndex];
@@ -284,6 +284,28 @@ const MapComponent = () => {
 							clearInterval(customerTimer); // Stop the timer as the driver has reached the end of directionsToCustomer
 							clearInterval(timer); // Stop the timer completely as the driver has reached the customer
 							setReachedCustomer(true);
+
+							const data = {
+								order_id: order.id,
+								driver_id: driver.id,
+								address: address,
+							};
+							fetch("http://localhost:5000/update-order-status", {
+								method: "POST",
+								headers: {
+									"Content-Type": "application/json",
+								},
+								body: JSON.stringify(data),
+							})
+								.then((response) => response.json())
+								.then((data) => {
+									console.log(data.order);
+									localStorage.setItem("order", JSON.stringify(data.order));
+									dispatch(setOrder(data.order));
+								})
+								.catch((error) => {
+									console.error(error);
+								});
 							return;
 						}
 
@@ -426,11 +448,14 @@ const MapComponent = () => {
 								/>
 							</>
 						)}
-						{directionsToWalmartService}
-						{directionsToCustomerService}
+
+						{order && order.order_status === null && directionsToWalmartService}
+						{order &&
+							order.order_status === null &&
+							directionsToCustomerService}
 						{/* {console.log("walmart", directionsToWalmart)}
 						{console.log("customer", directionsToCustomer)} */}
-						{directionsToWalmart && (
+						{order && order.order_status === null && directionsToWalmart && (
 							<DirectionsRenderer
 								options={{
 									directions: directionsToWalmart,
@@ -442,7 +467,7 @@ const MapComponent = () => {
 								}}
 							/>
 						)}
-						{directionsToCustomer && (
+						{order && order.order_status === null && directionsToCustomer && (
 							<DirectionsRenderer
 								options={{
 									directions: directionsToCustomer,
@@ -460,7 +485,8 @@ const MapComponent = () => {
 			{driver && walmartLocation && (
 				<OrderProgress
 					orderProgress={
-						reachedWalmart && reachedCustomer
+						(order && order.order_status === "DELIVERED") ||
+						(reachedWalmart && reachedCustomer)
 							? "Delivered"
 							: reachedWalmart
 							? "Driver has picked the grocery and is on their way"

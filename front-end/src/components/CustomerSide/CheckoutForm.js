@@ -8,6 +8,7 @@ import { useDispatch } from "react-redux";
 import { cartItemsCleared } from "./cartsSlice";
 import { useNavigate } from "react-router-dom";
 import { currentAddress } from "./loginSlice";
+import { setOrder } from "./orderSlice";
 
 export default function CheckoutForm({ cartItems, address }) {
 	//console.log(cartItems);
@@ -89,9 +90,11 @@ export default function CheckoutForm({ cartItems, address }) {
 		})
 			.then((response) => response.json())
 			.then((data) => {
-				console.log("Success:", data);
+				console.log(data);
+				dispatch(setOrder(data.order));
 				dispatch(cartItemsCleared());
 				dispatch(currentAddress(address));
+				localStorage.setItem("order", JSON.stringify(data.order));
 				localStorage.setItem("address", JSON.stringify(address));
 				navigate(`/order_success`);
 			})

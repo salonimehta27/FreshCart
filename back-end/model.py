@@ -81,14 +81,6 @@ class Driver(db.Model):
         for location in self.location:
             locations.append({"latitude": location.latitude, "longitude": location.longitude})
         return locations[0]
-    # def get_location(self):
-    #     locations = []
-    #     for location in self.location:
-    #         locations.append({
-    #             "latitude": str(location.latitude),
-    #             "longitude": str(location.longitude)
-    #         })
-    #     return locations[0] if locations else {}
 
     def to_dict(self):
         return {
@@ -141,14 +133,6 @@ class Product(db.Model):
     order_items = db.relationship("OrderItem", back_populates="product")
     cart_products = db.relationship("CartProduct", back_populates="product")
 
-    def clean_desc(self, desc):
-    # Remove HTML tags
-        desc = re.sub(r'<[^>]+>', '', desc)
-    # Remove extra white spaces
-        desc = re.sub(r'\s+', ' ', desc)
-    # Remove leading/trailing white spaces
-        desc = desc.strip()
-        return desc
     
     def to_dict(self):
         return {
@@ -156,7 +140,7 @@ class Product(db.Model):
             'aisle': self.aisle,
             'brand': self.brand,
             'badges': self.badges,
-            'description': re.sub('<.*?>', '', self.description) if self.description else None,
+            'description': self.description if self.description else None,
             'image': self.image,
             'images': self.images,
             'price': self.price,
@@ -177,8 +161,7 @@ class Order(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
     driver_id = db.Column(db.Integer, db.ForeignKey("drivers.id", ondelete="CASCADE"), nullable=True)
-    latitude = db.Column(db.Numeric, nullable=True)
-    longitude = db.Column(db.Numeric, nullable=True)
+    address = db.Column(db.String)
     order_status = db.Column(db.String)
     customer = db.relationship("Customer", back_populates="orders")
     driver = db.relationship("Driver", back_populates="orders")
@@ -186,16 +169,20 @@ class Order(db.Model):
     queries = db.relationship("Query", back_populates="order")
    
     def to_dict(self):
+        driver = Driver.query.get(self.driver_id)
+        driver_dict = driver.to_dict() if driver else None
         return {
             "id": self.id,
             "customer_id": self.customer_id,
             "total": self.total,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
-            "driver_id": self.driver_id,
-            "latitude": self.latitude,
-            "longitude": self.longitude
+            "driver": driver_dict,
+            "address": self.address,
+            "order_status": self.order_status,
+            "order_items": [item.to_dict(include_product=True) for item in self.order_items],
         }
+
     def __repr__(self):
         return f"<Order {self.id}>"
     
@@ -213,6 +200,22 @@ class OrderItem(db.Model):
     # Backpopulated relationships
     order = db.relationship("Order", back_populates="order_items")
     product = db.relationship("Product", back_populates="order_items")
+
+    def to_dict(self, include_product=False):
+        data = {
+            "id": self.id,
+            "order_id": self.order_id,
+            "product_id": self.product_id,
+            "quantity": self.quantity,
+            "price": self.price,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+        }
+        
+        if include_product:
+            data["product"] = self.product.to_dict()
+
+        return data
 
     def __repr__(self):
         return f"<OrderItem {self.id}>"

@@ -6,6 +6,7 @@ import currentRepReducer from "./components/AdminDashboard/AdminSlice";
 import chatReducer from "./chatSlice";
 import adminChatReducer from "./components/AdminDashboard/adminChatSlice";
 import mapReducer from "./components/CustomerSide/mapSlice";
+import orderReducer from "./components/CustomerSide/orderSlice";
 
 const store = configureStore({
 	reducer: {
@@ -16,6 +17,7 @@ const store = configureStore({
 		chat: chatReducer,
 		adminChat: adminChatReducer,
 		map: mapReducer,
+		order: orderReducer,
 	},
 });
 

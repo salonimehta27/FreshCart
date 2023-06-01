@@ -658,6 +658,8 @@ def update_customer_info():
 
     return jsonify(result)
 
+#### SUBMIT ORDER ######
+
 @app.route('/submit_order', methods=['POST'])
 def submit_order():
     data = request.get_json()
@@ -666,14 +668,17 @@ def submit_order():
 
     total_price = sum(item['quantity'] * item['price'] for item in order_items)
     total_price = round(total_price, 2)
-
+   
     new_order = Order(customer_id=customer_id, total=total_price)
     db.session.add(new_order)
-
+    db.session.commit()
+    # import pdb; pdb.set_trace()
     for item in order_items:
         order_item = OrderItem(order=new_order, product_id=item['product_id'], quantity=item['quantity'], price=item['price'])
         db.session.add(order_item)
+        db.session.commit()
 
+  
 
     if customer_id:
         cart = cart_f.get_cart_by_customer_id(customer_id)
@@ -681,10 +686,39 @@ def submit_order():
         cart.cart_products = []
         db.session.commit()
 
+    
     # Return a JSON response indicating success
-    return jsonify({'success': True})
+    return jsonify({"order": new_order.to_dict()})
 
 
+@app.route("/customer/<customer_id>/orders", methods=['GET'])
+def get_customer_orders(customer_id):
+    customer = Customer.query.get(customer_id)
+    if not customer:
+        return jsonify({"error": "Customer not found"}), 404
+
+    orders = Order.query.filter_by(customer_id=customer_id).order_by(Order.created_at.desc()).all()
+    order_list = [order.to_dict() for order in orders]
+
+    return jsonify({"orders": order_list})
+
+
+@app.route("/update-order-status", methods=['POST'])
+def update_order_status():
+    order_id = request.json.get("order_id")
+    driver_id = request.json.get("driver_id")
+    address = request.json.get("address")
+
+    order = Order.query.get(order_id)
+    order.driver_id = driver_id
+    order.address = json.dumps(address)
+    order.order_status = "DELIVERED"
+    db.session.commit() 
+
+    return jsonify({"order": order.to_dict()})
+
+
+    
 # Route for updating driver info
 @app.route('/update_driver_info', methods=['POST'])
 def update_driver_info():
@@ -706,6 +740,7 @@ def calculate_order_amount(items):
     
     return int(total * 100)
 
+###### STRIPE PAYMENT #########
 @app.route('/create-payment-intent', methods=['POST'])
 def create_payment():
     try:

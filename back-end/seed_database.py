@@ -10,7 +10,8 @@ from faker import Faker
 from math import radians, sin, cos, sqrt
 import crud 
 import model 
-import server 
+import server
+import re
 
 
 os.system('dropdb freshcart')
@@ -33,14 +34,27 @@ if response.status_code == 200:
         product_response = requests.get(get_product)
         if product_response.status_code == 200:
             product_data = product_response.json()
+            description = product_data.get('description')
+            raw_price = product_data.get('price')
+
+            if raw_price is not None:
+                price = float(raw_price)
+                price = max(3.0, min(price, 12.0))
+            else:
+                price = None
+
+            if description is not None:
+                cleaned_description = re.sub(r"&lt;.*?&gt;", "", description)
+            else:
+                cleaned_description = None
             new_product = Product(
                 aisle=product_data.get('aisle'),
                 brand=product_data.get('brand'),
                 badges=product_data.get('badges'),
-                description=product_data.get('description'),
+                description=cleaned_description,
                 image=product_data.get('image'),
                 images=product_data.get('images'),
-                price=product_data.get('price'),
+                price= price if price is None else uniform(3.0, price),
                 title=product_data.get('title'),
                 product_id = product_data.get("id")
             )
@@ -104,3 +118,4 @@ for _ in range(num_drivers):
     db.session.add(location)
 
 db.session.commit()
+print("Seed Successful")

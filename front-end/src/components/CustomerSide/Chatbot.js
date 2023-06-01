@@ -12,23 +12,13 @@ const Chatbot = () => {
 	const chatLog = useSelector((state) => state.chat.messages);
 	const [customerRepActive, setCustomerRepActive] = useState(false);
 	const [roomId, setRoomId] = useState(null);
+	const chat_id = useSelector((state) => state.chat.chatId);
 	const dispatch = useDispatch();
-
-	// useEffect(() => {
-	// 	socket.on("customer_rep_response", (data) => {
-	// 		console.log(data);
-	// 		dispatch(addChatMessage(data));
-	// 	});
-
-	// 	return () => {
-	// 		// Clean up the event listener when the component unmounts
-	// 		if (socket) {
-	// 			socket.off("customer_rep_response");
-	// 		}
-	// 	};
-	// }, []);
+	// console.log(roomId)
 	useEffect(() => {
 		socket.on("customer_rep_response", (data) => {
+			console.log(data);
+			console.log(roomId);
 			const currentChatId = roomId;
 			if (data.sender === "Customer_rep" && data.roomId === currentChatId) {
 				dispatch(addChatMessage(data));
@@ -40,7 +30,7 @@ const Chatbot = () => {
 				socket.off("customer_rep_response");
 			}
 		};
-	}, []);
+	}, [roomId]);
 
 	useEffect(() => {
 		socket.on("chatbot_response", (data) => {
@@ -86,7 +76,7 @@ const Chatbot = () => {
 					})
 						.then((response) => response.json())
 						.then((data) => {
-							//console.log(data);
+							console.log(data);
 							dispatch(addChatMessage(data.message));
 							// dispatch(loadChatMessages(data.chat_messages));
 							dispatch(setChatId(data.chatId));

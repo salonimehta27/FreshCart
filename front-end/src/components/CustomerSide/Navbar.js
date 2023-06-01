@@ -12,6 +12,7 @@ import NavDropdown from "react-bootstrap/NavDropdown";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import ShoppingCartIcon from "@material-ui/icons/ShoppingCart";
+import { FaUserCircle } from "react-icons/fa";
 
 function CustomNavbar({ currentUser }) {
 	const [searchQuery, setSearchQuery] = useState("");
@@ -29,6 +30,7 @@ function CustomNavbar({ currentUser }) {
 			.then((r) => r.json())
 			.then(() => {
 				dispatch(currentUserRemoved());
+				localStorage.removeItem("order");
 			});
 		navigate("/");
 	};
@@ -126,6 +128,12 @@ function CustomNavbar({ currentUser }) {
 							Submit
 						</Button>
 					</Form>
+					<Nav className="d-flex">
+						<FaUserCircle
+							size={24}
+							style={{ color: "white", marginLeft: "5px" }}
+						/>
+					</Nav>
 				</Navbar.Collapse>
 			</Container>
 		</Navbar>
