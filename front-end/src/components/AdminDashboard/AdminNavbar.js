@@ -34,7 +34,7 @@ function AdminNavbar() {
 			</div>
 			<ul className={`admin-navbar__list ${isMenuOpen ? "open" : ""}`}>
 				<li className="admin-navbar__item">
-					<Link to="/" className="admin-navbar__link">
+					<Link to="/admin" className="admin-navbar__link">
 						Home
 					</Link>
 				</li>

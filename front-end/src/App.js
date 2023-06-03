@@ -12,16 +12,18 @@ import { useDispatch, useSelector } from "react-redux";
 import { currentUserAdded } from "./components/CustomerSide/loginSlice";
 import { currentRepAdded } from "./components/AdminDashboard/AdminSlice";
 import Cart from "./components/CustomerSide/Cart";
-import Container from "react-bootstrap/Container";
 import AddressForm from "./components/CustomerSide/AddressForm";
 import PaymentForm from "./components/CustomerSide/PaymentForm";
 import OrderSuccess from "./components/CustomerSide/OrderSuccess";
 import Chatbot from "./components/CustomerSide/Chatbot";
 import LoginPage from "./components/AdminDashboard/LoginPage";
 import CustomerQueries from "./components/AdminDashboard/CustomerQueries";
-import { loadChatMessages, addChatMessage } from "./chatSlice";
-import AdminChatbot from "./components/AdminDashboard/AdminChatbot";
+import { loadChatMessages } from "./chatSlice";
 import { setChatId } from "./components/AdminDashboard/adminChatSlice";
+import { setAllOrders } from "./components/CustomerSide/orderSlice";
+import OrdersListPage from "./components/CustomerSide/OrdersListPage";
+import "./App.css";
+import Footer from "./components/CustomerSide/Footer";
 
 function App() {
 	const dispatch = useDispatch();
@@ -30,7 +32,9 @@ function App() {
 	const currentrep = useSelector((state) => state.currentRep.entities);
 	//const [chatLog, setChatLog] = useState([]);
 	const chatLog = useSelector((state) => state.chat.messages);
+	const orders = useSelector((state) => state.order.allOrders);
 	//console.log(currentUser);
+
 	useEffect(() => {
 		fetch("http://localhost:5000/me", {
 			credentials: "include",
@@ -51,6 +55,12 @@ function App() {
 				dispatch(setChatId(data.chatId));
 				dispatch(loadChatMessages(data.messages));
 			});
+
+		fetch("http://localhost:5000/customer/orders", {
+			credentials: "include",
+		})
+			.then((r) => r.json())
+			.then((data) => dispatch(setAllOrders(data.orders)));
 	}, []);
 
 	const isOnAdminRoute = window.location.pathname.startsWith("/admin");
@@ -83,12 +93,15 @@ function App() {
 					/>
 					<Route path="/admin-login" element={<LoginPage />} />
 					<Route path="/admin-queries" element={<CustomerQueries />} />
+					<Route path="/all-products" element={<Product />} />
+					<Route path="/orders" element={<OrdersListPage orders={orders} />} />
 				</Routes>
 				{currentUser !== null &&
 					currentUser !== undefined &&
 					!currentUser.error && <Chatbot />}
 
 				{/* {currentrep !== null && currentrep !== undefined && <AdminChatbot />} */}
+				{/* <Footer /> */}
 			</div>
 		</Router>
 	);

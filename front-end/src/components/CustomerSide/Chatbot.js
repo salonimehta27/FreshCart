@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./chatbot.css";
 import { useSelector, useDispatch } from "react-redux";
 import { loadChatMessages, addChatMessage } from "../../chatSlice";
@@ -13,12 +13,13 @@ const Chatbot = () => {
 	const [customerRepActive, setCustomerRepActive] = useState(false);
 	const [roomId, setRoomId] = useState(null);
 	const chat_id = useSelector((state) => state.chat.chatId);
+	const chatLogRef = useRef(null);
 	const dispatch = useDispatch();
 	// console.log(roomId)
 	useEffect(() => {
 		socket.on("customer_rep_response", (data) => {
-			console.log(data);
-			console.log(roomId);
+			// console.log(data);
+			// console.log(roomId);
 			const currentChatId = roomId;
 			if (data.sender === "Customer_rep" && data.roomId === currentChatId) {
 				dispatch(addChatMessage(data));
@@ -31,6 +32,17 @@ const Chatbot = () => {
 			}
 		};
 	}, [roomId]);
+
+	useEffect(() => {
+		scrollToBottom();
+	}, [chatLog]);
+
+	const scrollToBottom = () => {
+		if (chatLogRef.current) {
+			chatLogRef.current.scrollTop =
+				chatLogRef.current.scrollHeight - chatLogRef.current.clientHeight;
+		}
+	};
 
 	useEffect(() => {
 		socket.on("chatbot_response", (data) => {
@@ -63,7 +75,11 @@ const Chatbot = () => {
 				socket.emit("customer_response", payload);
 				setMessage("");
 			} else {
-				if (message.toLowerCase().includes("representative")) {
+				if (
+					message.toLowerCase().includes("representative") ||
+					message.toLowerCase().includes("yes") ||
+					message.toLowerCase().includes("human")
+				) {
 					dispatch(addChatMessage({ sender: "User", message: message }));
 					setCustomerRepActive(true);
 					fetch(`http://localhost:5000/post_query/${currentUser.customer_id}`, {
@@ -111,7 +127,7 @@ const Chatbot = () => {
 
 					// 		setMessage("");
 				}
-
+				scrollToBottom();
 				setMessage(""); // Clear the message input field
 			}
 		}
@@ -128,7 +144,7 @@ const Chatbot = () => {
 			</div>
 			{isChatOpen && (
 				<div className="chatbot-window">
-					<div className="chat-log">
+					<div className="chat-log" ref={chatLogRef}>
 						{chatLog &&
 							chatLog.map((entry, index) => (
 								<div

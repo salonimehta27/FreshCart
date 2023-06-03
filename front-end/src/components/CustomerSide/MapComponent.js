@@ -313,7 +313,7 @@ const MapComponent = () => {
 						customerStepIndex++;
 						// Set the start location for the next step as the end location of the current step
 						customerStartLocation = customerEndLocation;
-					}, 1000);
+					}, 800);
 					return () => {
 						clearInterval(customerTimer); // Stop the inner timer when the component unmounts or when directionsToCustomer changes
 					};
@@ -321,7 +321,7 @@ const MapComponent = () => {
 
 				// Increment the step index for directionsToWalmart
 				currentStepIndex++;
-			}, 1000);
+			}, 800);
 			return () => {
 				// Cleanup the timer when the component unmounts or when directionsToWalmart is completed
 				clearInterval(timer);

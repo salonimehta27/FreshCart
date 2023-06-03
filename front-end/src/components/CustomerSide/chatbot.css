@@ -73,6 +73,7 @@
   .chat-log {
     flex-grow: 1;
     padding: 16px;
+    height: 100%;
     overflow-y: auto;
   }
   

@@ -257,14 +257,12 @@ def get_response(user_input):
         return 'Goodbye!'
     elif 'product' in user_input:
         return 'Sure, I can help you with that. What specific product are you looking for?'
-    elif 'order' in user_input or "help" in user_input:
-        return 'How can I assist you with the order?'
     elif 'cancel' in user_input:
         return "To assist you with the cancellation, would you like me to connect you with representative?"
-    elif 'representative' in user_input or "human" in user_input or "speak to representative" in user_input:
-        return 'I can connect you to a representative. Please wait a moment.'
+    elif 'order' in user_input or "help" in user_input:
+        return 'How can I assist you with the order?'
     else:
-        return "I'm sorry, I didn't understand that."
+        return "I'm sorry, I am afraid I can't help you with that, would you like to speak to representative?"
 
 
 @socketio.on('disconnect')
@@ -285,7 +283,7 @@ def handle_user_message(data):
 @app.route("/post_query/<customer_id>", methods=["POST"])
 def handle_accept_query(customer_id):
     message = request.json['user_input']
-    if "representative" in message.lower():
+    if "representative" in message.lower() or "human" in message.lower() or "yes":
         query = Query(customer_id=customer_id, customer_rep_id=None, message=message, is_accepted=False)
         db.session.add(query)
         db.session.commit()
@@ -691,16 +689,21 @@ def submit_order():
     return jsonify({"order": new_order.to_dict()})
 
 
-@app.route("/customer/<customer_id>/orders", methods=['GET'])
-def get_customer_orders(customer_id):
-    customer = Customer.query.get(customer_id)
-    if not customer:
-        return jsonify({"error": "Customer not found"}), 404
+@app.route("/customer/orders", methods=['GET'])
+def get_customer_orders():
 
-    orders = Order.query.filter_by(customer_id=customer_id).order_by(Order.created_at.desc()).all()
-    order_list = [order.to_dict() for order in orders]
+    if ("user_id" in session):
 
-    return jsonify({"orders": order_list})
+        customer = Customer.query.get(session["user_id"])
+        customer_id = session["user_id"]
+        if not customer:
+            return jsonify({"error": "Customer not found"}), 404
+
+        orders = Order.query.filter_by(customer_id=customer_id).order_by(Order.created_at.desc()).all()
+        order_list = [order.to_dict() for order in orders]
+
+        return jsonify({"orders": order_list})
+    return jsonify({"error":"user not logged in"})
 
 
 @app.route("/update-order-status", methods=['POST'])

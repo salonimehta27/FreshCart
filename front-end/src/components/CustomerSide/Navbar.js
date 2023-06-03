@@ -9,17 +9,24 @@ import Badge from "@material-ui/core/Badge";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import NavDropdown from "react-bootstrap/NavDropdown";
-import Form from "react-bootstrap/Form";
+import { Form, InputGroup } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import ShoppingCartIcon from "@material-ui/icons/ShoppingCart";
-import { FaUserCircle } from "react-icons/fa";
+import { FaClipboardList } from "react-icons/fa";
+import { FaSearch } from "react-icons/fa";
+import "./navbar.css";
+import grocery from "../CustomerSide/images/grocery.png";
+import { useLocation } from "react-router-dom";
+import logo1 from "../CustomerSide/images/logo1.png";
 
-function CustomNavbar({ currentUser }) {
+function CustomNavbar({ currentUser, setShopNow, shopNow }) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [categoryFilter, setCategoryFilter] = useState("all");
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 	const cartData = useSelector((state) => state.carts.items);
+	const location = useLocation();
+	const isProductsPage = location.pathname === "/all-products";
 
 	const handleSearch = (searchQuery, categoryFilter) => {
 		dispatch(productFiltered({ searchQuery, categoryFilter }));
@@ -46,10 +53,10 @@ function CustomNavbar({ currentUser }) {
 	};
 
 	return (
-		<Navbar bg="dark" variant="dark" expand="lg">
+		<Navbar variant="dark" expand="lg" style={{ backgroundColor: "#0B614A" }}>
 			<Container>
 				<Navbar.Brand style={{ color: "white" }} href="/">
-					FreshCart
+					<img src={logo1} alt="logo" style={{ height: "50px" }}></img>
 				</Navbar.Brand>
 				<Navbar.Toggle aria-controls="basic-navbar-nav" />
 				<Navbar.Collapse id="basic-navbar-nav">
@@ -66,38 +73,68 @@ function CustomNavbar({ currentUser }) {
 						) : (
 							<Nav.Link href="/login">Login</Nav.Link>
 						)}
-						<NavDropdown title="Categories" id="basic-nav-dropdown">
-							<NavDropdown.Item
-								onClick={() =>
-									handleCategoryFilterChange({ target: { value: "all" } })
-								}
-							>
-								All
-							</NavDropdown.Item>
-							<NavDropdown.Divider />
-							<NavDropdown.Item
-								onClick={() =>
-									handleCategoryFilterChange({ target: { value: "category1" } })
-								}
-							>
-								Category 1
-							</NavDropdown.Item>
-							<NavDropdown.Item
-								onClick={() =>
-									handleCategoryFilterChange({ target: { value: "category2" } })
-								}
-							>
-								Category 2
-							</NavDropdown.Item>
-							<NavDropdown.Item
-								onClick={() =>
-									handleCategoryFilterChange({ target: { value: "category3" } })
-								}
-							>
-								Category 3
-							</NavDropdown.Item>
-						</NavDropdown>
+						{isProductsPage && (
+							<NavDropdown title="Shop by Brand" id="basic-nav-dropdown">
+								<NavDropdown.Item
+									onClick={() =>
+										handleCategoryFilterChange({ target: { value: "all" } })
+									}
+								>
+									All
+								</NavDropdown.Item>
+								<NavDropdown.Divider />
+								<NavDropdown.Item
+									onClick={() =>
+										handleCategoryFilterChange({
+											target: { value: "Cadbury" },
+										})
+									}
+								>
+									Cadbury
+								</NavDropdown.Item>
+								<NavDropdown.Item
+									onClick={() =>
+										handleCategoryFilterChange({
+											target: { value: "Kool-Aid" },
+										})
+									}
+								>
+									Kool-Aid
+								</NavDropdown.Item>
+								<NavDropdown.Item
+									onClick={() =>
+										handleCategoryFilterChange({
+											target: { value: "Ferrero" },
+										})
+									}
+								>
+									Ferrero
+								</NavDropdown.Item>
+								<NavDropdown.Item
+									onClick={() =>
+										handleCategoryFilterChange({
+											target: { value: "Greenfield" },
+										})
+									}
+								>
+									Greenfield
+								</NavDropdown.Item>
+							</NavDropdown>
+						)}
 					</Nav>
+					{isProductsPage && (
+						<Form className="d-flex">
+							<div className="search-container">
+								<input
+									type="text"
+									placeholder="Search"
+									className="mr-sm-2"
+									value={searchQuery}
+									onChange={handleSearchChange}
+								/>
+							</div>
+						</Form>
+					)}
 					<Nav className="d-flex">
 						<Nav.Link href="/cart" eventKey={2} className="justify-content-end">
 							<Badge
@@ -113,27 +150,17 @@ function CustomNavbar({ currentUser }) {
 							</Badge>
 						</Nav.Link>
 					</Nav>
-					<Form className="d-flex">
-						<Form.Control
-							type="text"
-							placeholder="Search"
-							className="mr-sm-2"
-							value={searchQuery}
-							onChange={handleSearchChange}
-						/>
-						<Button
-							variant="light"
-							onClick={() => handleSearch(searchQuery, categoryFilter)}
-						>
-							Submit
-						</Button>
-					</Form>
-					<Nav className="d-flex">
-						<FaUserCircle
-							size={24}
-							style={{ color: "white", marginLeft: "5px" }}
-						/>
-					</Nav>
+
+					{currentUser && !currentUser.error && (
+						<Nav className="d-flex">
+							<Nav.Link href="/orders">
+								<FaClipboardList
+									size={24}
+									style={{ color: "white", marginLeft: "5px" }}
+								/>
+							</Nav.Link>
+						</Nav>
+					)}
 				</Navbar.Collapse>
 			</Container>
 		</Navbar>

@@ -1,0 +1,31 @@
+.custom-card-group {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-top: 50px; /* Add margin on the top */
+    margin-left: 50px; /* Add margin on the left */
+    margin-right: 50px; /* Add margin on the right */
+  }
+  
+  .custom-card {
+    width: 30%;
+    margin-bottom: 20px;
+    margin-right: 4%;
+  }
+  
+  .custom-card:last-child {
+    margin-right: 0;
+  }
+  
+  .custom-card-image {
+    width: 100%;
+    height: 350px;
+    object-fit: cover;
+  }
+  
+  .custom-card-title {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+  
+  

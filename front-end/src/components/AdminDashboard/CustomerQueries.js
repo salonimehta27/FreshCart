@@ -45,8 +45,8 @@ function CustomerQueries() {
 			.then((data) => setQueries(data))
 			.catch((error) => console.error(error));
 	}, []);
-	console.log(queries);
-	console.log(currentrep);
+	// console.log(queries);
+	// console.log(currentrep);
 	return (
 		<div>
 			<h2>Customer Queries</h2>
@@ -64,9 +64,7 @@ function CustomerQueries() {
 					/>
 				))
 			) : (
-				<>
-					<h4>No queries at the moment</h4>
-				</>
+				<>{/* <h4>No queries at the moment</h4> */}</>
 			)}
 			{showChatBox && <Chatbox chatId={chatId} currentrep={currentrep} />}
 		</div>

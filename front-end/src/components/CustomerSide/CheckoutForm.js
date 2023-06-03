@@ -90,7 +90,7 @@ export default function CheckoutForm({ cartItems, address }) {
 		})
 			.then((response) => response.json())
 			.then((data) => {
-				console.log(data);
+				// console.log(data);
 				dispatch(setOrder(data.order));
 				dispatch(cartItemsCleared());
 				dispatch(currentAddress(address));

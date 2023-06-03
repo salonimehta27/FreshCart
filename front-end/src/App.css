@@ -1,6 +1,4 @@
-.App {
-  text-align: center;
-}
+
 
 .App-logo {
   height: 40vmin;
@@ -23,7 +21,11 @@
   font-size: calc(10px + 2vmin);
   color: white;
 }
-
+body {
+  /* font-family: 'Instacart Sans', Helvetica, Arial, sans-serif; */
+  /* background-color: #EAF5EB; */
+  /* font-family: "Trebuchet MS", Helvetica, sans-serif; */
+} 
 .App-link {
   color: #61dafb;
 }
@@ -36,3 +38,9 @@
     transform: rotate(360deg);
   }
 }
+/* @font-face {
+  font-family: 'Instacart Sans';
+  src: url('./fonts/instacart-sans.woff2') format('woff2'),
+       url('./fonts/instacart-sans.woff') format('woff'),
+       url('./fonts/instacart-sans.ttf') format('truetype');
+} */

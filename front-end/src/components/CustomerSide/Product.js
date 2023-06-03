@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { cartItemsAdded } from "./cartsSlice";
 import { Card, Row, Col, Button } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { OverlayTrigger, Popover } from "react-bootstrap";
 
 function Product() {
 	const dispatch = useDispatch();
@@ -34,8 +35,6 @@ function Product() {
 			.then((res) => res.json())
 			.then((data) => {
 				dispatch(cartItemsAdded(data));
-				// dispatch(cartItemsUpdated(data));
-				// console.log(data);
 			});
 	};
 	if (!products || !Array.isArray(products)) {
@@ -43,44 +42,60 @@ function Product() {
 	}
 
 	return (
-		<div>
-			<h3>Products</h3>
-			<Row xs={2} md={3} lg={4} className="g-4">
+		<div style={{ marginLeft: "50px", marginTop: "50px", marginRight: "50px" }}>
+			<Row xs={2} md={4} lg={5} className="g-4">
 				{filteredProducts.map((product) => (
 					<Col key={product.id}>
-						<Card>
-							<a href={`/products/${product.id}`}>
-								<Card.Img
-									variant="top"
-									src={product.images[2]}
-									alt={product.title}
-									style={{ objectFit: "contain", height: "200px" }}
-								/>
-							</a>
+						<Card rounded>
+							<Card.Img
+								variant="top"
+								src={product.images[2]}
+								alt={product.title}
+								style={{
+									objectFit: "contain",
+									height: "110px",
+									marginTop: "20px",
+								}}
+							/>
 							<Card.Body className="d-flex flex-column justify-content-between">
-								<Card.Title
-									style={{
-										whiteSpace: "nowrap",
-										overflow: "hidden",
-										textOverflow: "ellipsis",
-									}}
-								>
-									<Card.Title>
-										<a
-											href={`/products/${product.id}`}
-											className="text-decoration-none"
+								<OverlayTrigger
+									trigger="hover"
+									placement="top"
+									overlay={
+										<Popover
+											id={`popover-${product.id}`}
+											className="custom-popover"
 										>
-											<h5 className="text-dark">{product.title}</h5>
-										</a>
+											<Popover.Body>
+												<span style={{ color: "black" }}>{product.title}</span>
+											</Popover.Body>
+										</Popover>
+									}
+								>
+									<Card.Title
+										style={{
+											whiteSpace: "nowrap",
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+										}}
+									>
+										<Card.Title>
+											<a
+												href={`/products/${product.id}`}
+												className="text-decoration-none"
+											>
+												<h5 className="text-dark">{product.title}</h5>
+											</a>
+										</Card.Title>
 									</Card.Title>
-								</Card.Title>
+								</OverlayTrigger>
 								<Card.Text style={{ marginBottom: "1rem" }}>
 									Price: $ {product.price.toFixed(2)}
 								</Card.Text>
 								<Button
 									variant="primary"
 									onClick={(e) => handleCart(e, product.id)}
-									// style={{ marginRight: "2rem" }}
+									style={{ backgroundColor: "#08AC0A", color: "#FFFFFF" }}
 								>
 									Add to Cart
 								</Button>

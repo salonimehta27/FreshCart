@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import socket from "../../socket";
 import { addAdminChatMessage, loadAdminChatMessages } from "./adminChatSlice";
+import "./AdminDashboard.css";
 
 function Chatbox({ chatId, currentrep }) {
 	const chatMessages = useSelector((state) => state.adminChat.messages);
@@ -45,34 +46,38 @@ function Chatbox({ chatId, currentrep }) {
 	}
 
 	return (
-		<div className="chat-box">
-			<div className="chat-messages">
-				{chatMessages.map((message, index) => (
-					<div
-						key={index}
-						className={`message ${message.sender.toLowerCase()} ${
-							message.sender === "Customer_rep" ? "right" : "left"
-						}`}
+		<div className="container" style={{ height: "50vh" }}>
+			<div className="chat-box">
+				<div className="chat-messages">
+					{chatMessages.map((message, index) => (
+						<div
+							key={index}
+							className={`message ${message.sender.toLowerCase()} ${
+								message.sender === "Customer_rep" ? "right" : "left"
+							}`}
+						>
+							<span className="sender">{message.sender}: </span>
+							<span className="content">{message.message}</span>
+						</div>
+					))}
+				</div>
+				<div className="chat-input">
+					<input
+						type="text"
+						placeholder="Type your message..."
+						value={messageInput}
+						style={{ width: "100%" }}
+						onChange={(e) => setMessageInput(e.target.value)}
+					/>
+					<button
+						onClick={() => handleSendMessage(currentrep.customer_rep_id)}
+						disabled={!messageInput}
 					>
-						<span className="sender">{message.sender}: </span>
-						<span className="content">{message.message}</span>
-					</div>
-				))}
+						Send
+					</button>
+				</div>
 			</div>
-			<div className="chat-input">
-				<input
-					type="text"
-					placeholder="Type your message..."
-					value={messageInput}
-					onChange={(e) => setMessageInput(e.target.value)}
-				/>
-				<button
-					onClick={() => handleSendMessage(currentrep.customer_rep_id)}
-					disabled={!messageInput}
-				>
-					Send
-				</button>
-			</div>
+			{/* <div>SEARCH ORDERS</div> */}
 		</div>
 	);
 }

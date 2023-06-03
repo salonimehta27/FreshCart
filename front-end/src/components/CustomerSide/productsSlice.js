@@ -16,7 +16,7 @@ const productsSlice = createSlice({
 			const { searchQuery, categoryFilter } = action.payload;
 			const newFilteredProducts = state.entities.filter((product) => {
 				const matchedCategory =
-					categoryFilter === "all" || product.category === categoryFilter;
+					categoryFilter === "all" || product.brand === categoryFilter;
 				const matchedSearch = product.title
 					.toLowerCase()
 					.includes(searchQuery.toLowerCase());

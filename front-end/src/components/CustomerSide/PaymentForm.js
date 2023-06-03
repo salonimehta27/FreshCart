@@ -6,7 +6,7 @@ import AddressForm from "./AddressForm";
 import { useSelector, useDispatch } from "react-redux";
 import { cartItemsAdded } from "./cartsSlice";
 import { useLocation } from "react-router-dom";
-function PaymentForm() {
+function PaymentForm({ cartItems }) {
 	// console.log(process.env);
 	// console.log(process.env.REACT_APP_STRIPE_API_KEY);
 	const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_API_KEY);
@@ -15,9 +15,9 @@ function PaymentForm() {
 	const [address, setAddress] = useState(null);
 	//const cartItems = useSelector((state) => state.carts.items);
 	const location = useLocation();
-	const cartItems = JSON.parse(
-		decodeURIComponent(new URLSearchParams(location.search).get("cartItems"))
-	);
+	// const cartItems = JSON.parse(
+	// 	decodeURIComponent(new URLSearchParams(location.search).get("cartItems"))
+	// );
 	//console.log(cartItems);
 	useEffect(() => {
 		// Create PaymentIntent as soon as the page loads
