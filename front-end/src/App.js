@@ -1,27 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "./components/CustomerSide/Navbar";
+import Navbar from "./components/CustomerSide/features/navbar/Navbar";
 import AdminNavbar from "./components/AdminDashboard/AdminNavbar";
 import Home from "./components/CustomerSide/Home";
-import Product from "./components/CustomerSide/Product";
-import ProductDetails from "./components/CustomerSide/ProductDetails";
-import SignupForm from "./components/CustomerSide/SignupForm";
-import LoginForm from "./components/CustomerSide/LoginForm";
+import Product from "./components/CustomerSide/features/product/Product";
+import ProductDetails from "./components/CustomerSide/features/product/ProductDetails";
+import SignupForm from "./components/CustomerSide/features/account/SignupForm";
+import LoginForm from "./components/CustomerSide/features/account/LoginForm";
 import AdminDashboard from "./components/AdminDashboard/AdminDashboard";
 import { useDispatch, useSelector } from "react-redux";
-import { currentUserAdded } from "./components/CustomerSide/loginSlice";
+import { currentUserAdded } from "./components/CustomerSide/features/account/loginSlice";
 import { currentRepAdded } from "./components/AdminDashboard/AdminSlice";
-import Cart from "./components/CustomerSide/Cart";
-import AddressForm from "./components/CustomerSide/AddressForm";
-import PaymentForm from "./components/CustomerSide/PaymentForm";
-import OrderSuccess from "./components/CustomerSide/OrderSuccess";
-import Chatbot from "./components/CustomerSide/Chatbot";
+import Cart from "./components/CustomerSide/features/order/Cart";
+import AddressForm from "./components/CustomerSide/features/after payment/AddressForm";
+import PaymentForm from "./components/CustomerSide/features/after payment/PaymentForm";
+import OrderSuccess from "./components/CustomerSide/features/after payment/OrderSuccess";
+import Chatbot from "./components/CustomerSide/features/chat/Chatbot";
 import LoginPage from "./components/AdminDashboard/LoginPage";
 import CustomerQueries from "./components/AdminDashboard/CustomerQueries";
 import { loadChatMessages } from "./chatSlice";
 import { setChatId } from "./components/AdminDashboard/adminChatSlice";
-import { setAllOrders } from "./components/CustomerSide/orderSlice";
-import OrdersListPage from "./components/CustomerSide/OrdersListPage";
+import { setAllOrders } from "./components/CustomerSide/features/order/orderSlice";
+import OrdersListPage from "./components/CustomerSide/features/order/OrdersListPage";
 import "./App.css";
 import Footer from "./components/CustomerSide/Footer";
 
@@ -30,10 +30,8 @@ function App() {
 	const currentUser = useSelector((state) => state.currentUser.entities);
 	const cartItems = useSelector((state) => state.carts.items);
 	const currentrep = useSelector((state) => state.currentRep.entities);
-	//const [chatLog, setChatLog] = useState([]);
 	const chatLog = useSelector((state) => state.chat.messages);
 	const orders = useSelector((state) => state.order.allOrders);
-	//console.log(currentUser);
 
 	useEffect(() => {
 		fetch("http://localhost:5000/me", {

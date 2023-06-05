@@ -1,0 +1,148 @@
+/* chatbot.css */
+
+.chatbot-container {
+    display: flex;
+    flex-direction: column;
+    /* align-items: flex-end; */
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #c0e4dd;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    transition: height 0.3s ease;
+    overflow: hidden;
+    width: 300px;
+    z-index: 10;
+  }
+  
+  .chatbot-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    width: 100%;
+    background-color: #02856E;
+    color: #ffffff;
+    cursor: pointer;
+  }
+  
+  .chat-input {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background-color: #f5f5f5;
+    border-top: 1px solid #ccc;
+    width: 100%;
+  }
+  
+  .input-field {
+    flex-grow: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    margin-right: 8px;
+    box-sizing: border-box;
+  }
+  
+  button {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #45a049;
+  }
+  
+  
+  .chatbot-container.open {
+    height: 400px;
+  }
+  
+  .chatbot-window {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: auto;
+  }
+  
+  .chat-log {
+    flex-grow: 1;
+    padding: 16px;
+    height: 100%;
+    overflow-y: auto;
+  }
+  
+  .chat-entry {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 10px;
+  }
+  
+  .chat-entry.user {
+    justify-content: flex-end;
+  }
+  
+  .chat-entry .message-bubble {
+    max-width: 70%;
+    padding: 10px;
+    border-radius: 10px;
+    background-color: #f5f5f5;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .chat-entry.user .message-bubble {
+    background-color: #22a29e;
+    color: white;
+  }
+  
+  .chat-entry.bot .message-bubble {
+    background-color: #c0e4dd;
+  }
+  
+  .chat-entry.user .message-text {
+    text-align: right;
+  }
+  
+  .chat-entry.bot .message-text {
+    text-align: left;
+  }
+  
+  .chat-entry.user .message-timestamp {
+    text-align: right;
+    margin-left: 10px;
+  }
+  
+  .chat-entry.bot .message-timestamp {
+    text-align: left;
+    margin-right: 10px;
+  }
+  
+  
+  .input-field {
+    flex-grow: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    margin-right: 8px;
+  }
+  
+  button {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #45a049;
+  }
+  
+  

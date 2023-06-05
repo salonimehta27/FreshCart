@@ -1,6 +1,6 @@
 .custom-card-group {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     flex-wrap: wrap;
     margin-top: 50px; /* Add margin on the top */
     margin-left: 50px; /* Add margin on the left */
@@ -8,7 +8,8 @@
   }
   
   .custom-card {
-    width: 30%;
+    /* width: 30%; */
+    flex-basis: 30%; /* Initially set each card to occupy 30% of the container width */
     margin-bottom: 20px;
     margin-right: 4%;
   }
@@ -28,4 +29,32 @@
     margin-bottom: 10px;
   }
   
+  .card-heading {
+    font-size: 1.5rem; /* Default font size for larger screens */
+    margin-top: 150px;
+  }
+
+  @media (max-width: 768px){
+    .custom-card {
+      flex-basis: 100%; 
+      margin-right: 0;
+    }
+  }
   
+  @media (max-width: 768px) {
+    .card-heading {
+      font-size: 1.2rem; 
+      margin-top: 100px;
+    }
+  }
+  
+  .cards{
+    margin-top:20px;
+    font-size: 1.1rem;
+  }
+
+  @media (max-width: 768px) {
+    .cards {
+      margin-top: 10px;
+    }
+  }
