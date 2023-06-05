@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import CheckoutForm from "../order/CheckoutForm";
+import CheckoutForm from "./CheckoutForm";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import AddressForm from "./AddressForm";
 import { useSelector, useDispatch } from "react-redux";
-import { cartItemsAdded } from "../order/cartsSlice";
+import { cartItemsAdded } from "./cartsSlice";
 import { useLocation } from "react-router-dom";
 function PaymentForm({ cartItems }) {
 	// console.log(process.env);

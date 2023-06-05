@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { productsReceived } from "./productsSlice";
 import { useSelector, useDispatch } from "react-redux";
-import { cartItemsAdded } from "../order/cartsSlice";
+import { cartItemsAdded } from "../order & payment/cartsSlice";
 import { Card, Row, Col, Button } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { OverlayTrigger, Popover } from "react-bootstrap";

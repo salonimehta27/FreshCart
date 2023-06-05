@@ -4,7 +4,7 @@ import Container from "react-bootstrap/Container";
 import Image from "react-bootstrap/Image";
 import { Card, Row, Col, Button } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
-import { cartItemsAdded } from "../order/cartsSlice";
+import { cartItemsAdded } from "../order & payment/cartsSlice";
 function ProductDetails() {
 	const [product, setProduct] = useState(null);
 	const id = window.location.pathname.split("/")[2];

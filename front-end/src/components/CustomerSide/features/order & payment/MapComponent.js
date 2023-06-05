@@ -9,7 +9,7 @@ import {
 	DirectionsService,
 } from "@react-google-maps/api";
 import axios from "axios";
-import OrderProgress from "../order/OrderProgress";
+import OrderProgress from "./OrderProgress";
 import socket from "../../../../socket";
 import walmart from "../../images/walmart.jpeg";
 import { FaCar } from "react-icons/fa";
@@ -26,7 +26,7 @@ import {
 	// setDirectionsToWalmart,
 } from "./mapSlice";
 import { renderToString } from "react-dom/server";
-import { setOrder } from "../order/orderSlice";
+import { setOrder } from "./orderSlice";
 
 const MapComponent = () => {
 	const customerId = useSelector((state) => state.currentUser.entities);

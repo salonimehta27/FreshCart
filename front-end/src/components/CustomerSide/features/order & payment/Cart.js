@@ -7,13 +7,12 @@ import {
 	cartItemsCleared,
 } from "./cartsSlice";
 import { Link } from "react-router-dom";
-import "../order/Cart.css";
+import "./Cart.css";
 import { FaTrashAlt } from "react-icons/fa";
 import visa from "../../images/visa.png";
 import mc from "../../images/mc.png";
 import amex from "../../images/amex.png";
-import "../order/checkout.css";
-import PaymentForm from "../after payment/PaymentForm";
+import PaymentForm from "./PaymentForm";
 import { Modal, Button } from "react-bootstrap";
 
 function Cart() {
@@ -31,6 +30,15 @@ function Cart() {
 		setShowModal(false);
 	};
 
+	useEffect(() => {
+		fetch("http://localhost:5000/myCart", {
+			credentials: "include",
+		})
+			.then((res) => res.json())
+			.then((data) => {
+				dispatch(cartItemsAdded(data));
+			});
+	}, []);
 	// Update cart item quantity
 	// console.log(currentUser);
 	const handleQuantityChange = (id, quantity) => {
@@ -46,20 +54,9 @@ function Cart() {
 		})
 			.then((res) => res.json())
 			.then((data) => {
-				// console.log(data);
-				dispatch(cartItemsUpdated(data));
+				dispatch(cartItemsUpdated({ id, quantity }));
 			});
 	};
-
-	useEffect(() => {
-		fetch("http://localhost:5000/myCart", {
-			credentials: "include",
-		})
-			.then((res) => res.json())
-			.then((data) => {
-				dispatch(cartItemsAdded(data));
-			});
-	}, []);
 
 	// Remove item from cart
 	const handleRemoveItem = (id) => {
