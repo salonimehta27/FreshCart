@@ -67,7 +67,7 @@ const OrderDetailsPage = ({ order }) => {
 										style={{ backgroundColor: "#08AC0A", color: "#FFFFFF" }}
 										onClick={(e) => handleCart(e, item.product.id)}
 									>
-										Purchase Again / Add to Cart
+										Buy Again
 									</button>
 								</div>
 							</div>

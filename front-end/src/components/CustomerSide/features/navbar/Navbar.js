@@ -1,6 +1,6 @@
 import React from "react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, NavLink } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { productFiltered } from "../product/productsSlice";
 import { currentUserAdded, currentUserRemoved } from "../account/loginSlice";
@@ -12,7 +12,7 @@ import NavDropdown from "react-bootstrap/NavDropdown";
 import { Form, InputGroup } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import ShoppingCartIcon from "@material-ui/icons/ShoppingCart";
-import { FaClipboardList } from "react-icons/fa";
+import { FaUser, FaClipboardList, FaSignOutAlt } from "react-icons/fa";
 import { FaSearch } from "react-icons/fa";
 import "./navbar.css";
 import grocery from "../../images/grocery.png";
@@ -61,20 +61,12 @@ function CustomNavbar({ currentUser, setShopNow, shopNow }) {
 				<Navbar.Toggle aria-controls="basic-navbar-nav" />
 				<Navbar.Collapse id="basic-navbar-nav">
 					<Nav className="me-auto">
-						{currentUser && !currentUser.error ? (
-							<a
-								href="/"
-								onClick={handleLogout}
-								style={{ color: "white" }}
-								className="nav-link"
-							>
-								Logout
-							</a>
-						) : (
-							<Nav.Link href="/login">Login</Nav.Link>
-						)}
 						{isProductsPage && (
-							<NavDropdown title="Shop by Brand" id="basic-nav-dropdown">
+							<NavDropdown
+								title="Shop by Brand"
+								id="basic-nav-dropdown"
+								style={{ color: "white", fontSize: "20px" }}
+							>
 								<NavDropdown.Item
 									onClick={() =>
 										handleCategoryFilterChange({ target: { value: "all" } })
@@ -151,15 +143,64 @@ function CustomNavbar({ currentUser, setShopNow, shopNow }) {
 						</Nav.Link>
 					</Nav>
 
-					{currentUser && !currentUser.error && (
-						<Nav className="d-flex">
-							<Nav.Link href="/orders">
-								<FaClipboardList
-									size={24}
-									style={{ color: "white", marginLeft: "5px" }}
-								/>
+					{currentUser && !currentUser.error ? (
+						<NavDropdown
+							title={<FaUser />}
+							id="basic-nav-dropdown"
+							style={{
+								color: "white",
+								marginLeft: "10px",
+								fontSize: "20px",
+							}}
+						>
+							<Nav.Link
+								as={NavLink}
+								to="/edit-profile"
+								className="dropdown-item"
+								style={{
+									marginLeft: "20px",
+									fontSize: "20px",
+									width: "80%",
+								}}
+							>
+								<FaUser style={{ marginRight: "10px" }} /> Account
 							</Nav.Link>
-						</Nav>
+							<Nav.Link
+								as={NavLink}
+								to="/orders"
+								className="dropdown-item"
+								style={{
+									marginLeft: "20px",
+									fontSize: "20px",
+									width: "80%",
+								}}
+							>
+								<FaClipboardList style={{ marginRight: "10px" }} /> Orders
+							</Nav.Link>
+							<Nav.Link
+								as={NavLink}
+								to="/"
+								onClick={handleLogout}
+								className="dropdown-item"
+								style={{
+									marginLeft: "20px",
+									fontSize: "20px",
+									width: "80%",
+								}}
+							>
+								<FaSignOutAlt style={{ marginRight: "10px" }} /> Logout
+							</Nav.Link>
+						</NavDropdown>
+					) : (
+						<Nav.Link
+							as={NavLink}
+							to="/login"
+							style={{
+								color: "white",
+							}}
+						>
+							Login
+						</Nav.Link>
 					)}
 				</Navbar.Collapse>
 			</Container>

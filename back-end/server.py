@@ -291,16 +291,17 @@ def handle_accept_query(customer_id):
         db.session.add(chat)
         db.session.commit()
         #import pdb; pdb.set_trace()
-        for message in session["chat_messages"]:
-            if message['sender'] == 'User':
-                chat_message = ChatMessage(message=message['message'], chat_id=chat.id, customer_id=customer_id)
-                db.session.add(chat_message)
-            elif message['sender'] == 'Chatbot':
-                chat_message = ChatMessage(message=message['message'], chat_id=chat.id)
-                db.session.add(chat_message)
-        db.session.commit()
-        session["chat_messages"] = []
-        session["chat_id"] = chat.id
+        if "chat_messages" in session:
+            for message in session["chat_messages"]:
+                if message['sender'] == 'User':
+                    chat_message = ChatMessage(message=message['message'], chat_id=chat.id, customer_id=customer_id)
+                    db.session.add(chat_message)
+                elif message['sender'] == 'Chatbot':
+                    chat_message = ChatMessage(message=message['message'], chat_id=chat.id)
+                    db.session.add(chat_message)
+            db.session.commit()
+            session["chat_messages"] = []
+            session["chat_id"] = chat.id
         messages = []
         chat_messages = ChatMessage.query.filter_by(chat_id=chat.id).all()
 
@@ -313,7 +314,7 @@ def handle_accept_query(customer_id):
                 messages.append({'sender': 'Customer_rep', 'message': message.message})
         response = {"sender":"Chatbot", "message":"I can connect you to a representative. Please wait a moment and don't refresh the page"}
 
-        return jsonify({"chatId" : session["chat_id"], "message": response})
+        return jsonify({"chatId" : chat.id, "message": response})
 
 @app.route("/api/chat/<customer_id>", methods=["POST"])
 def chat(customer_id):
@@ -509,7 +510,8 @@ def process_login():
             # session['chat_messages'] = []
             print("process login", session["user_id"])
             cart_f.merge_guest_cart() # Merge the guest cart with the user's cart, if applicable
-            return jsonify({"id":user.customer.id, 
+            return jsonify({"id":user.id,
+                            "customer_id":user.customer.id,
                             "fname":user.fname,
                             "lname":user.lname,
                             "username":user.username,
@@ -573,6 +575,31 @@ def process_logout():
     session.pop("chat_messages", None)
     session.pop("chat_id", None)
     return jsonify(success=True)
+
+
+@app.route("/users/<id>", methods=["PATCH"])
+def update_customer(id):
+    user = User.query.get(id)
+    if not user:
+        return jsonify(message="User not found"), 404
+    
+    if 'username' in request.json:
+        user.username = request.json['username']
+    
+    if 'password' in request.json and 'password_confirmation' in request.json:
+        password = request.json['password']
+        password_confirmation = request.json['password_confirmation']
+        if password == password_confirmation:
+            user.password = password
+    
+    db.session.commit()
+    
+    return jsonify({"id":user.id, "fname":user.fname,
+                           "lname":user.lname,
+                           "username":user.username,
+                           "email":user.email,
+                           "customer_id":user.customer.id}), 200
+
 
 ######### PRODUCTS ###########
 @app.route("/products")

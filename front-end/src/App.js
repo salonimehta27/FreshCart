@@ -24,6 +24,7 @@ import { setAllOrders } from "./components/CustomerSide/features/order & payment
 import OrdersListPage from "./components/CustomerSide/features/order & payment/OrdersListPage";
 import "./App.css";
 import Footer from "./components/CustomerSide/Footer";
+import Editprofile from "./components/CustomerSide/features/account/Editprofile";
 
 function App() {
 	const dispatch = useDispatch();
@@ -32,7 +33,6 @@ function App() {
 	const currentrep = useSelector((state) => state.currentRep.entities);
 	const chatLog = useSelector((state) => state.chat.messages);
 	const orders = useSelector((state) => state.order.allOrders);
-
 	useEffect(() => {
 		fetch("http://localhost:5000/me", {
 			credentials: "include",
@@ -93,6 +93,12 @@ function App() {
 					<Route path="/admin-queries" element={<CustomerQueries />} />
 					<Route path="/all-products" element={<Product />} />
 					<Route path="/orders" element={<OrdersListPage orders={orders} />} />
+					{currentUser !== null && (
+						<Route
+							path="/edit-profile"
+							element={<Editprofile currentUser={currentUser} />}
+						/>
+					)}
 				</Routes>
 				{currentUser !== null &&
 					currentUser !== undefined &&

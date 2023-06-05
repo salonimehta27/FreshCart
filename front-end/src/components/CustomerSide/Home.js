@@ -8,6 +8,7 @@ import updates from "../CustomerSide/images/updates.jpg";
 import tracking from "../CustomerSide/images/tracking.jpg";
 import banner10 from "../CustomerSide/images/banner10-min.png";
 import "../CustomerSide/css/CardGroup.css";
+import { useSelector } from "react-redux";
 const Home = () => {
 	return (
 		<div>
