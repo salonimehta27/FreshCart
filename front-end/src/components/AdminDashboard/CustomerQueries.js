@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import CustomerQueryItem from "./CustomerQueryItem";
 import Chatbox from "./Chatbox";
 import { currentRepAdded } from "./AdminSlice";
 import socket from "../../socket";
+import { addQuery, setQueries } from "./querySlice";
 
 import { useSelector, useDispatch } from "react-redux";
 function CustomerQueries() {
-	const [queries, setQueries] = useState([]);
+	const queries = useSelector((state) => state.query);
+	// const [queries, setQueries] = useState([]);
 	const currentrep = useSelector((state) => state.currentRep.entities);
 	const [showChatBox, setShowChatBox] = useState(false);
 	// const chatId = useSelector((state) => state.adminChat.chat_id);
@@ -20,14 +22,18 @@ function CustomerQueries() {
 		// Rest of your code
 	}
 	useEffect(() => {
-		// Listen for incoming chat messages
-
 		socket.on("customer query", (data) => {
-			console.log(data);
-			setQueries([...queries, data]);
-			// Handle the response as needed
+			dispatch(addQuery(data.query));
 		});
-	}, []);
+
+		return () => {
+			// Clean up the event listener when the component unmounts
+			if (socket) {
+				socket.off("customer query");
+			}
+		};
+	}, [dispatch]);
+	console.log(queries);
 	useEffect(() => {
 		fetch("http://localhost:5000/admin-me", {
 			credentials: "include",
@@ -42,7 +48,10 @@ function CustomerQueries() {
 			credentials: "include",
 		})
 			.then((response) => response.json())
-			.then((data) => setQueries(data))
+			.then((data) => {
+				console.log(data);
+				dispatch(setQueries(data));
+			})
 			.catch((error) => console.error(error));
 	}, []);
 	// console.log(queries);

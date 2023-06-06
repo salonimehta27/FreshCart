@@ -16,15 +16,7 @@ import { FaCar } from "react-icons/fa";
 import { FaUser } from "react-icons/fa";
 import { FaShoppingCart } from "react-icons/fa";
 
-import {
-	setWalmartLocation,
-	setDriver,
-	setCustomerLocation,
-	setEstimatedTime,
-	setDirections,
-	// setDirectionsToCustomer,
-	// setDirectionsToWalmart,
-} from "./mapSlice";
+import { setWalmartLocation, setDriver, setCustomerLocation } from "./mapSlice";
 import { renderToString } from "react-dom/server";
 import { setOrder } from "./orderSlice";
 import delivered from "../../images/delivered.jpg";
@@ -315,7 +307,7 @@ const MapComponent = () => {
 						customerStepIndex++;
 						// Set the start location for the next step as the end location of the current step
 						customerStartLocation = customerEndLocation;
-					}, 1000);
+					}, 700);
 					return () => {
 						clearInterval(customerTimer); // Stop the inner timer when the component unmounts or when directionsToCustomer changes
 					};
@@ -323,7 +315,7 @@ const MapComponent = () => {
 
 				// Increment the step index for directionsToWalmart
 				currentStepIndex++;
-			}, 1000);
+			}, 700);
 			return () => {
 				// Cleanup the timer when the component unmounts or when directionsToWalmart is completed
 				clearInterval(timer);

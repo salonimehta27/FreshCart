@@ -313,7 +313,7 @@ def handle_accept_query(customer_id):
             elif message.customer_rep_id:
                 messages.append({'sender': 'Customer_rep', 'message': message.message})
         response = {"sender":"Chatbot", "message":"I can connect you to a representative. Please wait a moment and don't refresh the page"}
-
+        socketio.emit("customer query", {"query" : query.to_dict()})
         return jsonify({"chatId" : chat.id, "message": response})
 
 @app.route("/api/chat/<customer_id>", methods=["POST"])

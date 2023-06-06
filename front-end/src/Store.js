@@ -3,6 +3,7 @@ import productsReducer from "./components/CustomerSide/features/product/products
 import currentUserReducer from "./components/CustomerSide/features/account/loginSlice";
 import cartsReducer from "./components/CustomerSide/features/order & payment/cartsSlice";
 import currentRepReducer from "./components/AdminDashboard/AdminSlice";
+import queryReducer from "./components/AdminDashboard//querySlice";
 import chatReducer from "./chatSlice";
 import adminChatReducer from "./components/AdminDashboard/adminChatSlice";
 import mapReducer from "./components/CustomerSide/features/order & payment/mapSlice";
@@ -18,6 +19,7 @@ const store = configureStore({
 		adminChat: adminChatReducer,
 		map: mapReducer,
 		order: orderReducer,
+		query: queryReducer,
 	},
 });
 
