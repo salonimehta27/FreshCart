@@ -939,3 +939,25 @@ def get_directions(driver, walmart):
 #         "directions": directions["directions"],
 #         "estimated_time": directions["estimated_time"]
 #     }
+
+
+# Define responses
+
+
+
+# def get_response(user_input):
+#     if 'hi' in user_input:
+#         return 'Hello! How can I assist you today?'
+#     elif 'bye' in user_input:
+#         return 'Goodbye!'
+#     elif 'product' in user_input:
+#         return 'Sure, I can help you with that. What specific product are you looking for?'
+#     elif 'cancel' in user_input:
+#         return "To assist you with the cancellation, would you like me to connect you with representative?"
+#     elif 'order' in user_input or "help" in user_input:
+#         return 'How can I assist you with the order?'
+#     else:
+#         return "I'm sorry, I am afraid I can't help you with that, would you like to speak to representative?"
+
+    # preprocessed_input = preprocess_input(message)
+    # response = get_response(preprocessed_input)

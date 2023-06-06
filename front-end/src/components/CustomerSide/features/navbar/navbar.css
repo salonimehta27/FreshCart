@@ -23,6 +23,11 @@
   .search-icon {
     color: white;
   }
+  .custom-dropdown .dropdown-item.active {
+    background-color: white;
+    color:black;
+  }
+  
   
   /* Adjust the styles as needed */
   

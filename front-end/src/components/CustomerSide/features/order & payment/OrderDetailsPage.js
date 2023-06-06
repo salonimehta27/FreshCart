@@ -27,19 +27,25 @@ const OrderDetailsPage = ({ order }) => {
 		<div className="container mt-4">
 			<h2>Order Details</h2>
 			<div>
-				<h4>Delivery Address:</h4>
-				<p style={{ margin: "0" }}>{parsedAddress.line1}</p>
-				{parsedAddress.line2 && <p>{parsedAddress.line2}</p>}
-				<p>
-					{parsedAddress.city}, {parsedAddress.state}, {parsedAddress.country}{" "}
-					{parsedAddress.postal_code}
-				</p>
+				{parsedAddress && (
+					<>
+						<h4>Delivery Address:</h4>
+						<p style={{ margin: "0" }}>{parsedAddress.line1}</p>
+						{parsedAddress.line2 && <p>{parsedAddress.line2}</p>}
+						<p>
+							{parsedAddress.city}, {parsedAddress.state},{" "}
+							{parsedAddress.country} {parsedAddress.postal_code}
+						</p>
+					</>
+				)}
 			</div>
 
-			<div>
-				<h4>Driver Details:</h4>
-				<p>Driver Name: {order.driver.name}</p>
-			</div>
+			{order.order_status === "DELIVERED" && (
+				<div>
+					<h4>Driver Details:</h4>
+					<p>Driver Name: {order.driver.name}</p>
+				</div>
+			)}
 			<div style={{ marginTop: "10px" }}>
 				<h4>Order Total:</h4>
 				<p>Total: ${order.total}</p>

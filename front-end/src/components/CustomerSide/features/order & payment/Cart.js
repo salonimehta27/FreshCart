@@ -86,7 +86,9 @@ function Cart() {
 			const product = cartItems.products.find((p) => p.id === item.product_id);
 			return total + product.price * item.quantity;
 		}, 0);
-	return (
+	return cartItems &&
+		cartItems.cart_products &&
+		cartItems.cart_products.length > 0 ? (
 		<div className="container mt-5">
 			<div className="row">
 				<div className="col-md-8">
@@ -261,6 +263,43 @@ function Cart() {
 				</div>
 			</div>
 		</div>
+	) : (
+		<>
+			<div
+				style={{
+					display: "flex",
+					flexDirection: "column",
+					alignItems: "center",
+					justifyContent: "center",
+					height: "100vh",
+				}}
+			>
+				<img
+					src="https://i.imgur.com/dCdflKN.png"
+					alt="Cart is empty"
+					style={{ width: "200px", height: "200px", marginBottom: "20px" }}
+				/>
+				<p
+					style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "20px" }}
+				>
+					Cart is empty
+				</p>
+				<a href="/all-products">
+					<button
+						style={{
+							padding: "10px 20px",
+							backgroundColor: "#007bff",
+							color: "#fff",
+							border: "none",
+							borderRadius: "4px",
+							cursor: "pointer",
+						}}
+					>
+						Continue shopping
+					</button>
+				</a>
+			</div>
+		</>
 	);
 }
 

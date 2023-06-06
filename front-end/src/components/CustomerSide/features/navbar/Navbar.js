@@ -17,7 +17,8 @@ import { FaSearch } from "react-icons/fa";
 import "./navbar.css";
 import grocery from "../../images/grocery.png";
 import { useLocation } from "react-router-dom";
-import logo1 from "../../images/logo1.png";
+import logo3 from "../../images/logo3.png";
+import { MdOutlineManageAccounts } from "react-icons/md";
 
 function CustomNavbar({ currentUser, setShopNow, shopNow }) {
 	const [searchQuery, setSearchQuery] = useState("");
@@ -56,7 +57,11 @@ function CustomNavbar({ currentUser, setShopNow, shopNow }) {
 		<Navbar variant="dark" expand="lg" style={{ backgroundColor: "#0B614A" }}>
 			<Container>
 				<Navbar.Brand style={{ color: "white" }} href="/">
-					<img src={logo1} alt="logo" style={{ height: "50px" }}></img>
+					<img
+						src={logo3}
+						alt="logo"
+						style={{ height: "", width: "100px" }}
+					></img>
 				</Navbar.Brand>
 				<Navbar.Toggle aria-controls="basic-navbar-nav" />
 				<Navbar.Collapse id="basic-navbar-nav">
@@ -115,11 +120,11 @@ function CustomNavbar({ currentUser, setShopNow, shopNow }) {
 						)}
 					</Nav>
 					{isProductsPage && (
-						<Form className="d-flex">
+						<Form className="d-flex" style={{ marginRight: "10px" }}>
 							<div className="search-container">
 								<input
 									type="text"
-									placeholder="Search"
+									placeholder="Search Products"
 									className="mr-sm-2"
 									value={searchQuery}
 									onChange={handleSearchChange}
@@ -127,26 +132,20 @@ function CustomNavbar({ currentUser, setShopNow, shopNow }) {
 							</div>
 						</Form>
 					)}
-					<Nav className="d-flex">
-						<Nav.Link href="/cart" eventKey={2} className="justify-content-end">
-							<Badge
-								color="secondary"
-								overlap="rectangular"
-								badgeContent={
-									cartData && cartData.cart_products
-										? cartData.cart_products.length
-										: null
-								}
-							>
-								<ShoppingCartIcon style={{ color: "white" }} />
-							</Badge>
-						</Nav.Link>
-					</Nav>
-
+					{currentUser && !currentUser.error && (
+						<h5 style={{ color: "white", marginTop: "10px" }}>
+							Hello, {currentUser.fname}
+						</h5>
+					)}
 					{currentUser && !currentUser.error ? (
 						<NavDropdown
-							title={<FaUser />}
+							title={
+								<>
+									<MdOutlineManageAccounts size={28} />
+								</>
+							}
 							id="basic-nav-dropdown"
+							className="custom-dropdown justify-content-end"
 							style={{
 								color: "white",
 								marginLeft: "10px",
@@ -161,6 +160,7 @@ function CustomNavbar({ currentUser, setShopNow, shopNow }) {
 									marginLeft: "20px",
 									fontSize: "20px",
 									width: "80%",
+									paddingRight: "0", // Remove right padding to hide the arrow
 								}}
 							>
 								<FaUser style={{ marginRight: "10px" }} /> Account
@@ -173,6 +173,7 @@ function CustomNavbar({ currentUser, setShopNow, shopNow }) {
 									marginLeft: "20px",
 									fontSize: "20px",
 									width: "80%",
+									paddingRight: "0", // Remove right padding to hide the arrow
 								}}
 							>
 								<FaClipboardList style={{ marginRight: "10px" }} /> Orders
@@ -186,6 +187,7 @@ function CustomNavbar({ currentUser, setShopNow, shopNow }) {
 									marginLeft: "20px",
 									fontSize: "20px",
 									width: "80%",
+									paddingRight: "0", // Remove right padding to hide the arrow
 								}}
 							>
 								<FaSignOutAlt style={{ marginRight: "10px" }} /> Logout
@@ -202,6 +204,27 @@ function CustomNavbar({ currentUser, setShopNow, shopNow }) {
 							Login
 						</Nav.Link>
 					)}
+
+					<Nav className="d-flex">
+						<Nav.Link
+							href="/cart"
+							eventKey={2}
+							className="justify-content-end"
+							// style={{ marginRight: "20px" }}
+						>
+							<Badge
+								color="secondary"
+								overlap="rectangular"
+								badgeContent={
+									cartData && cartData.cart_products
+										? cartData.cart_products.length
+										: null
+								}
+							>
+								<ShoppingCartIcon style={{ color: "white" }} />
+							</Badge>
+						</Nav.Link>
+					</Nav>
 				</Navbar.Collapse>
 			</Container>
 		</Navbar>

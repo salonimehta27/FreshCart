@@ -5,7 +5,9 @@
   "dependencies": {
     "@iconify/icons-mdi": "^1.2.46",
     "@iconify/react": "^4.1.0",
+    "@material-ui/core": "^4.12.4",
     "@material-ui/icons": "^4.11.3",
+    "@ramonak/react-progress-bar": "^5.0.3",
     "@react-google-maps/api": "^2.18.1",
     "@reduxjs/toolkit": "^1.9.5",
     "@stripe/react-stripe-js": "^2.1.0",
@@ -26,6 +28,7 @@
     "react-dom": "^18.2.0",
     "react-google-maps": "^9.4.5",
     "react-icons": "^4.8.0",
+    "react-progress-bar": "^0.1.0",
     "react-redux": "^8.0.5",
     "react-scripts": "5.0.1",
     "redux": "^4.2.1",

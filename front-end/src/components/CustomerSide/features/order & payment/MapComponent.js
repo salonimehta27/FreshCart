@@ -27,13 +27,16 @@ import {
 } from "./mapSlice";
 import { renderToString } from "react-dom/server";
 import { setOrder } from "./orderSlice";
+import delivered from "../../images/delivered.jpg";
 
 const MapComponent = () => {
 	const customerId = useSelector((state) => state.currentUser.entities);
 	const address = useSelector((state) => state.currentUser.address);
 	const driver = useSelector((state) => state.map.driver);
 	const walmartLocation = useSelector((state) => state.map.walmartLocation);
-	const estimatedTime = useSelector((state) => state.map.estimatedTime);
+	const [estimatedTimeToWalmart, setEstimatedTimeToWalmart] = useState(0);
+	const [estimatedTimeToCustomer, setEstimatedTimeToCustomer] = useState(0);
+
 	const directions = useSelector((state) => state.map.directions);
 	const customerLoc = useSelector((state) => state.map.customerLocation);
 	const [directionsToWalmart, setDirectionsToWalmart] = useState(null);
@@ -43,7 +46,7 @@ const MapComponent = () => {
 	const [showMarker, setShowMarker] = useState(false);
 	const orderValue = localStorage.getItem("order");
 	const order = JSON.parse(orderValue);
-	console.log(order);
+	//console.log(order);
 	// console.log(order);
 	const dispatch = useDispatch();
 
@@ -76,7 +79,6 @@ const MapComponent = () => {
 						//console.log(infoResponse.data.directionsToWalmart);
 						dispatch(setWalmartLocation(infoResponse.data.walmart_location));
 						dispatch(setDriver(infoResponse.data.driver));
-						dispatch(setEstimatedTime(infoResponse.data.estimated_time));
 						setShowMarker(true);
 					}
 				}
@@ -313,7 +315,7 @@ const MapComponent = () => {
 						customerStepIndex++;
 						// Set the start location for the next step as the end location of the current step
 						customerStartLocation = customerEndLocation;
-					}, 800);
+					}, 1000);
 					return () => {
 						clearInterval(customerTimer); // Stop the inner timer when the component unmounts or when directionsToCustomer changes
 					};
@@ -321,7 +323,7 @@ const MapComponent = () => {
 
 				// Increment the step index for directionsToWalmart
 				currentStepIndex++;
-			}, 800);
+			}, 1000);
 			return () => {
 				// Cleanup the timer when the component unmounts or when directionsToWalmart is completed
 				clearInterval(timer);
@@ -343,6 +345,8 @@ const MapComponent = () => {
 		//console.log(response);
 		if (response !== null) {
 			setDirectionsToWalmart(response);
+			const durationToWalmart = response.routes[0].legs[0].duration.value; // Duration in seconds
+			setEstimatedTimeToWalmart(durationToWalmart / 60); // Convert to minutes and update estimated time to Walmart
 		}
 	};
 
@@ -350,8 +354,13 @@ const MapComponent = () => {
 		//console.log(response);
 		if (response !== null) {
 			setDirectionsToCustomer(response);
+			const durationToCustomer = response.routes[0].legs[0].duration.value; // Duration in seconds
+			setEstimatedTimeToCustomer(durationToCustomer / 60); // Convert to minutes and update estimated time to the customer
 		}
 	};
+
+	const totalEstimatedTime = estimatedTimeToWalmart + estimatedTimeToCustomer;
+
 	const directionsToWalmartService = useMemo(() => {
 		if (driver && walmartLocation) {
 			return (
@@ -388,7 +397,7 @@ const MapComponent = () => {
 	// console.log(showMarker);
 	// console.log(customerLoc);
 	// console.log(walmartLocation);
-	// console.log(directions);
+	console.log(directionsToWalmart);
 
 	const onLoad = (map) => {
 		const bounds = new google.maps.LatLngBounds();
@@ -404,83 +413,122 @@ const MapComponent = () => {
 		<div className="container" style={{ height: "100vh", width: "100%" }}>
 			{!isLoaded ? (
 				<h1>Loading...</h1>
-			) : (
+			) : order.order_status !== "DELIVERED" ? (
 				<>
-					<GoogleMap mapContainerStyle={containerStyle} onLoad={onLoad}>
-						{showMarker && customerLoc && (
-							<>
-								<Marker
-									position={{
-										lat: parseFloat(customerLoc.lat),
-										lng: parseFloat(customerLoc.lng),
-									}}
-									icon={{
-										url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-											renderToString(<FaUser color="red" size={40} />)
-										)}`,
-										scaledSize: new window.google.maps.Size(40, 40),
-									}}
-								/>
+					{order && order.order_status === null && (
+						<div style={{ textAlign: "center", marginTop: "20px" }}>
+							<h2>Your order was successful!</h2>
+							<p>
+								We have connected you with the nearest driver. They will contact
+								you shortly to confirm your delivery details.
+							</p>
+						</div>
+					)}
+					<div
+						style={{
+							display: "flex",
+							justifyContent: "center",
+							alignItems: "center",
+							height: "45vh",
+						}}
+					>
+						<GoogleMap
+							mapContainerStyle={{ width: "80%", height: "100%" }}
+							onLoad={onLoad}
+							options={{ padding: "10px" }}
+						>
+							{showMarker && customerLoc && (
+								<>
+									<Marker
+										position={{
+											lat: parseFloat(customerLoc.lat),
+											lng: parseFloat(customerLoc.lng),
+										}}
+										icon={{
+											url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+												renderToString(<FaUser color="red" size={40} />)
+											)}`,
+											scaledSize: new window.google.maps.Size(40, 40),
+										}}
+									/>
 
-								<Marker
-									position={{
-										lat: parseFloat(driver.location.latitude),
-										lng: parseFloat(driver.location.longitude),
-									}}
-									icon={{
-										url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-											renderToString(<FaCar color="blue" size={40} />)
-										)}`,
-										scaledSize: new window.google.maps.Size(40, 40),
-									}}
-								/>
-								<Marker
-									position={{
-										lat: parseFloat(walmartLocation.latitude),
-										lng: parseFloat(walmartLocation.longitude),
-									}}
-									icon={{
-										url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-											renderToString(<FaShoppingCart color="green" size={40} />)
-										)}`,
-										scaledSize: new window.google.maps.Size(40, 40),
-									}}
-								/>
-							</>
-						)}
+									<Marker
+										position={{
+											lat: parseFloat(driver.location.latitude),
+											lng: parseFloat(driver.location.longitude),
+										}}
+										icon={{
+											url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+												renderToString(<FaCar color="blue" size={40} />)
+											)}`,
+											scaledSize: new window.google.maps.Size(40, 40),
+										}}
+									/>
+									<Marker
+										position={{
+											lat: parseFloat(walmartLocation.latitude),
+											lng: parseFloat(walmartLocation.longitude),
+										}}
+										icon={{
+											url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+												renderToString(
+													<FaShoppingCart color="green" size={40} />
+												)
+											)}`,
+											scaledSize: new window.google.maps.Size(40, 40),
+										}}
+									/>
+								</>
+							)}
 
-						{order && order.order_status === null && directionsToWalmartService}
-						{order &&
-							order.order_status === null &&
-							directionsToCustomerService}
-						{/* {console.log("walmart", directionsToWalmart)}
+							{order &&
+								order.order_status === null &&
+								directionsToWalmartService}
+							{order &&
+								order.order_status === null &&
+								directionsToCustomerService}
+							{/* {console.log("walmart", directionsToWalmart)}
 						{console.log("customer", directionsToCustomer)} */}
-						{order && order.order_status === null && directionsToWalmart && (
-							<DirectionsRenderer
-								options={{
-									directions: directionsToWalmart,
-									suppressMarkers: true,
-									polylineOptions: {
-										strokeColor: "blue",
-										strokeWeight: 4,
-									},
-								}}
-							/>
-						)}
-						{order && order.order_status === null && directionsToCustomer && (
-							<DirectionsRenderer
-								options={{
-									directions: directionsToCustomer,
-									suppressMarkers: true,
-									polylineOptions: {
-										strokeColor: "red",
-										strokeWeight: 4,
-									},
-								}}
-							/>
-						)}
-					</GoogleMap>
+							{order && order.order_status === null && directionsToWalmart && (
+								<DirectionsRenderer
+									options={{
+										directions: directionsToWalmart,
+										suppressMarkers: true,
+										polylineOptions: {
+											strokeColor: "blue",
+											strokeWeight: 4,
+										},
+									}}
+								/>
+							)}
+							{order && order.order_status === null && directionsToCustomer && (
+								<DirectionsRenderer
+									options={{
+										directions: directionsToCustomer,
+										suppressMarkers: true,
+										polylineOptions: {
+											strokeColor: "red",
+											strokeWeight: 4,
+										},
+									}}
+								/>
+							)}
+						</GoogleMap>
+					</div>
 				</>
+			) : (
+				<div className="card border-0 text-center">
+					<div className="card-body">
+						<>
+							<h3>Your order has been delivered!!</h3>
+							<img
+								src={delivered}
+								alt="delivered"
+								className="mx-auto d-block"
+							/>
+						</>
+					</div>
+				</div>
 			)}
 			{driver && walmartLocation && (
 				<OrderProgress
@@ -495,7 +543,7 @@ const MapComponent = () => {
 					carDetails={`${driver.car_model}, ${driver.license_plate}`}
 					store={`${walmartLocation.name}`}
 					storeAddress={`${walmartLocation.address}`}
-					estimatedTime={estimatedTime}
+					estimatedTime={totalEstimatedTime}
 					driverName={driver.name}
 				/>
 			)}

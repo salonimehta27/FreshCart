@@ -11,21 +11,11 @@ function OrderSuccess() {
 	useEffect(() => {}, []);
 	return (
 		<div>
-			{order && order.order_status === null && (
-				<>
-					<h2>Your order was successful!</h2>
-					<p>
-						We are connecting you with the nearest driver. They will contact you
-						shortly to confirm your delivery details.
-					</p>
-				</>
-			)}
-
-			{order && order.order_status === "DELIVERED" && (
+			{/* {order && order.order_status === "DELIVERED" && (
 				<>
 					<h2> Order is Delivered</h2>
 				</>
-			)}
+			)} */}
 
 			<MapComponent address={address} />
 		</div>
