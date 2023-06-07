@@ -16,7 +16,7 @@ Summary
 **Frontend:** React, Redux, Javascript, Bootstrap, CSS, HTML5, MaterialUI <br/>
 **Backend:** Python, Flask, PostgreSQL, SQLAlchemy <br/>
 **APIs:** Stripe API, Google maps API, Spooncular API, <br/>
-**Libraries:** flask_socketio, react-stripe-js, socket.io-client, react-redux, flask-caching, NLTK, react-google-maps, react-bootstrap, react-icons
+**Other Libraries:** flask_socketio, react-stripe-js, socket.io-client, react-redux, flask-caching, NLTK, react-google-maps, react-bootstrap, react-icons
 
 ## <a name="features"></a>Features 📽
 
