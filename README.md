@@ -59,7 +59,7 @@ To have this app running on your local computer, please follow the below steps:
 Clone repository:
 
 ```
-$ git clone https://github.com/agnaite/planty.git
+$ git clone (link)
 ```
 
 Create a virtual environment🔮:
@@ -88,13 +88,13 @@ export STRIPE_API_KEY='abc'
 export GOOGLE_API_KEY='abc'
 ```
 
-Create database 'plants'.
+Create database 'freshcart'.
 
 ```
-$ createdb plants
+$ createdb freshcart
 ```
 
-Create your database tables and seed🌱 example data.
+Create your database tables and seed example data.
 
 ```
 $ python model.py
