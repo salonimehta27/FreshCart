@@ -170,6 +170,12 @@ const Chatbot = () => {
 							onChange={handleInputChange}
 							placeholder="Type your message..."
 							className="input-field"
+							onKeyDown={(e) => {
+								if (e.key === "Enter") {
+									e.preventDefault(); // Prevents the default Enter key behavior
+									sendMessage();
+								}
+							}}
 						/>
 						<button onClick={sendMessage}>Send</button>
 					</div>

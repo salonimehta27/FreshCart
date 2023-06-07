@@ -28,6 +28,7 @@
     "react-dom": "^18.2.0",
     "react-google-maps": "^9.4.5",
     "react-icons": "^4.8.0",
+    "react-modal": "^3.16.1",
     "react-progress-bar": "^0.1.0",
     "react-redux": "^8.0.5",
     "react-scripts": "5.0.1",

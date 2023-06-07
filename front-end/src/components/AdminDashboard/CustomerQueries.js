@@ -4,8 +4,10 @@ import Chatbox from "./Chatbox";
 import { currentRepAdded } from "./AdminSlice";
 import socket from "../../socket";
 import { addQuery, setQueries } from "./querySlice";
-
+import "./queries.css";
 import { useSelector, useDispatch } from "react-redux";
+import { Modal } from "react-bootstrap";
+
 function CustomerQueries() {
 	const queries = useSelector((state) => state.query);
 	// const [queries, setQueries] = useState([]);
@@ -13,14 +15,21 @@ function CustomerQueries() {
 	const [showChatBox, setShowChatBox] = useState(false);
 	// const chatId = useSelector((state) => state.adminChat.chat_id);
 	const [chatId, setChatId] = useState();
+	const [showModal, setShowModal] = useState(false);
 	const dispatch = useDispatch();
 	function handleClick(chatId) {
 		// Update the showChatBox state
 		console.log(chatId);
 		setShowChatBox(true);
 		setChatId(chatId);
+		setShowModal(true);
 		// Rest of your code
 	}
+
+	const handleCloseModal = () => {
+		setShowModal(false);
+		setChatId(null);
+	};
 	useEffect(() => {
 		socket.on("customer query", (data) => {
 			dispatch(addQuery(data.query));
@@ -58,7 +67,7 @@ function CustomerQueries() {
 	// console.log(currentrep);
 	return (
 		<div>
-			<h2>Customer Queries</h2>
+			<h2 style={{ textAlign: "center" }}>Customer Queries</h2>
 
 			{queries && queries.length > 0 ? (
 				queries.map((query) => (
@@ -75,7 +84,23 @@ function CustomerQueries() {
 			) : (
 				<>{/* <h4>No queries at the moment</h4> */}</>
 			)}
-			{showChatBox && <Chatbox chatId={chatId} currentrep={currentrep} />}
+			{showModal && (
+				<Modal
+					show={showModal}
+					onHide={handleCloseModal}
+					style={{ height: "100vh", marginTop: "50px" }}
+				>
+					<Modal.Header closeButton>
+						<Modal.Title>Customer Service</Modal.Title>
+					</Modal.Header>
+					<Modal.Body>
+						<Chatbox chatId={chatId} currentrep={currentrep} />
+					</Modal.Body>
+					<Modal.Footer>
+						<button onClick={handleCloseModal}>Close</button>
+					</Modal.Footer>
+				</Modal>
+			)}
 		</div>
 	);
 }

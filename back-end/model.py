@@ -347,6 +347,9 @@ class Query(db.Model):
         return f'<Query id={self.id} message={self.message} is_accepted={self.is_accepted}>'
 
     def to_dict(self):
+        customer = db.session.query(Customer).get(self.customer_id)
+        customer_fname = customer.user.fname if customer else None
+        customer_lname = customer.user.lname if customer else None
         return {
             'id': self.id,
             'message': self.message,
@@ -355,7 +358,9 @@ class Query(db.Model):
             'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
             'order_id': self.order_id,
             'customer_id': self.customer_id,
-            'customer_rep_id': self.customer_rep_id
+            'customer_rep_id': self.customer_rep_id,
+            'customer_fname':customer_fname,
+            'customer_lname':customer_lname
         }
 def connect_to_db(flask_app, db_uri="postgresql:///freshcart", echo=True):
     flask_app.config["SQLALCHEMY_DATABASE_URI"] = db_uri

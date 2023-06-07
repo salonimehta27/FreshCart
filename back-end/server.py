@@ -507,7 +507,8 @@ def process_login():
     if user is not None:
         if user.password == password:
             session['user_id'] = user.customer.id
-            # session['chat_messages'] = []
+            # import pdb; pdb.set_trace()
+            session['chat_messages'] = []
             print("process login", session["user_id"])
             cart_f.merge_guest_cart() # Merge the guest cart with the user's cart, if applicable
             return jsonify({"id":user.id,
@@ -574,6 +575,7 @@ def process_logout():
     session.pop('user_id', None)
     session.pop("chat_messages", None)
     session.pop("chat_id", None)
+    
     return jsonify(success=True)
 
 

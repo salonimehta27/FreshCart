@@ -3,6 +3,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { loadAdminChatMessages } from "./adminChatSlice";
 import socket from "../../socket";
 import { useState, useEffect } from "react";
+import "./queries.css";
+import { NavLink } from "react-router-dom";
 function CustomerQueryItem({
 	query,
 	queries,
@@ -21,7 +23,7 @@ function CustomerQueryItem({
 	// 		socket.disconnect();
 	// 	};
 	// }, []);
-
+	console.log(query);
 	function handleClick(id) {
 		// console.log(currentRep);
 		fetch(`http://localhost:5000/accept-query/${id}`, {
@@ -52,14 +54,19 @@ function CustomerQueryItem({
 	}
 
 	return (
-		<div className="card mb-3">
+		<div className="card mb-3 ticket-item">
 			<div className="card-body">
 				<h2></h2>
-				<h3 className="card-title">Needs Assistance: {query.message}</h3>
-				<p className="card-text">{query.is_accepted}</p>
+				<h3 className="card-title customer-name">
+					Needs Assistance: {query.message}
+				</h3>
+				<p className="card-text">
+					Created At: {new Date(query.created_at).toLocaleString()}
+				</p>
+				<p className="card-text">Customer name: {query.customer_fname}</p>
 				<button
-					onClick={() => handleClick(query.id)}
 					className="btn btn-primary"
+					onClick={() => handleClick(query.id)}
 				>
 					Attend
 				</button>

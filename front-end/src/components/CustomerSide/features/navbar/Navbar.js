@@ -19,6 +19,7 @@ import grocery from "../../images/grocery.png";
 import { useLocation } from "react-router-dom";
 import logo3 from "../../images/logo3.png";
 import { MdOutlineManageAccounts } from "react-icons/md";
+import { clearChat } from "../../../../chatSlice";
 
 function CustomNavbar({ currentUser, setShopNow, shopNow }) {
 	const [searchQuery, setSearchQuery] = useState("");
@@ -38,6 +39,7 @@ function CustomNavbar({ currentUser, setShopNow, shopNow }) {
 			.then((r) => r.json())
 			.then(() => {
 				dispatch(currentUserRemoved());
+				dispatch(clearChat());
 				localStorage.removeItem("order");
 			});
 		navigate("/");

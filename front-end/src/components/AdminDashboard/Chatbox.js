@@ -1,13 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import socket from "../../socket";
 import { addAdminChatMessage, loadAdminChatMessages } from "./adminChatSlice";
 import "./AdminDashboard.css";
+// import styles from "../AdminDashboard/Chatbox.module.css";
 
 function Chatbox({ chatId, currentrep }) {
 	const chatMessages = useSelector((state) => state.adminChat.messages);
 	const [messageInput, setMessageInput] = useState("");
 	//const currentRep = useSelector((state) => state.currentRep.entities);
+
+	const chatMessagesRef = useRef(null);
+
+	useEffect(() => {
+		chatMessagesRef.current.scrollTop =
+			chatMessagesRef.current.scrollHeight -
+			chatMessagesRef.current.clientHeight;
+	}, [chatMessages]);
 	const dispatch = useDispatch();
 	useEffect(() => {
 		// Listen for incoming chat messages
@@ -46,38 +55,45 @@ function Chatbox({ chatId, currentrep }) {
 	}
 
 	return (
-		<div className="container" style={{ height: "50vh" }}>
-			<div className="chat-box">
-				<div className="chat-messages">
-					{chatMessages.map((message, index) => (
-						<div
-							key={index}
-							className={`message ${message.sender.toLowerCase()} ${
-								message.sender === "Customer_rep" ? "right" : "left"
-							}`}
-						>
-							<span className="sender">{message.sender}: </span>
+		<div className="chat-box">
+			<div className="chat-messages" ref={chatMessagesRef}>
+				{chatMessages.map((message, index) => (
+					<div
+						key={index}
+						className={`message ${message.sender.toLowerCase()} ${
+							message.sender === "Customer_rep" ? "right" : "left"
+						}`}
+					>
+						<div className="message-bubble">
+							{message.sender !== "Customer_rep" && (
+								<span className="sender">{message.sender}: </span>
+							)}
 							<span className="content">{message.message}</span>
 						</div>
-					))}
-				</div>
-				<div className="chat-input">
-					<input
-						type="text"
-						placeholder="Type your message..."
-						value={messageInput}
-						style={{ width: "100%" }}
-						onChange={(e) => setMessageInput(e.target.value)}
-					/>
-					<button
-						onClick={() => handleSendMessage(currentrep.customer_rep_id)}
-						disabled={!messageInput}
-					>
-						Send
-					</button>
-				</div>
+					</div>
+				))}
 			</div>
-			{/* <div>SEARCH ORDERS</div> */}
+			<div className="chat-input">
+				<input
+					type="text"
+					placeholder="Type your message..."
+					value={messageInput}
+					style={{ width: "100%" }}
+					onChange={(e) => setMessageInput(e.target.value)}
+					onKeyDown={(e) => {
+						if (e.key === "Enter") {
+							e.preventDefault(); // Prevents the default Enter key behavior
+							handleSendMessage(currentrep.customer_rep_id);
+						}
+					}}
+				/>
+				<button
+					onClick={() => handleSendMessage(currentrep.customer_rep_id)}
+					disabled={!messageInput}
+				>
+					Send
+				</button>
+			</div>
 		</div>
 	);
 }

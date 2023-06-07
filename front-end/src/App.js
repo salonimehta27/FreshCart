@@ -93,6 +93,7 @@ function App() {
 					<Route path="/admin-queries" element={<CustomerQueries />} />
 					<Route path="/all-products" element={<Product />} />
 					<Route path="/orders" element={<OrdersListPage orders={orders} />} />
+					{/* <Route path="/customer-help" element={<Chatbot />} /> */}
 					{currentUser !== null && (
 						<Route
 							path="/edit-profile"
