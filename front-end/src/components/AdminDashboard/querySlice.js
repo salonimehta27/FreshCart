@@ -10,7 +10,7 @@ const querySlice = createSlice({
 			state.push(action.payload);
 		},
 		setQueries: (state, action) => {
-			return action.payload;
+			return action.payload; // Return the updated queries directly as the new state
 		},
 	},
 });

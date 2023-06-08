@@ -16,6 +16,7 @@ function CustomerQueries() {
 	// const chatId = useSelector((state) => state.adminChat.chat_id);
 	const [chatId, setChatId] = useState();
 	const [showModal, setShowModal] = useState(false);
+	const [currentQuery, setCurrentQuery] = useState(null);
 	const dispatch = useDispatch();
 	function handleClick(chatId) {
 		// Update the showChatBox state
@@ -25,10 +26,16 @@ function CustomerQueries() {
 		setShowModal(true);
 		// Rest of your code
 	}
-
+	console.log(queries);
 	const handleCloseModal = () => {
 		setShowModal(false);
 		setChatId(null);
+		dispatch(() => {
+			setQueries((prevQueries) => {
+				const updatedQueries = prevQueries.filter((q) => q.id !== currentQuery);
+				return updatedQueries;
+			});
+		});
 	};
 	useEffect(() => {
 		socket.on("customer query", (data) => {
@@ -79,6 +86,7 @@ function CustomerQueries() {
 						currentRep={currentrep}
 						showChatBox={showChatBox}
 						handleShowClick={handleClick}
+						handleCurrentQuery={setCurrentQuery}
 					/>
 				))
 			) : (

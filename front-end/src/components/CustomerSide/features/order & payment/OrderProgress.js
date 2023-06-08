@@ -9,72 +9,132 @@ const OrderProgress = ({
 	storeAddress,
 	estimatedTime,
 	driverName,
+	orderNumber,
+	orderDate,
 }) => {
-	const calculateProgressPercentage = (orderProgress) => {
-		let progressPercentage = 0;
+	const calculateProgressStep = (orderProgress) => {
+		let progressStep = 0;
 		if (orderProgress === "Driver is on their way to pick groceries") {
-			progressPercentage = 25;
+			progressStep = 1;
 		} else if (
 			orderProgress === "Driver has picked the grocery and is on their way"
 		) {
-			progressPercentage = 50;
+			progressStep = 2;
 		} else if (orderProgress === "Delivered") {
-			progressPercentage = 100;
+			progressStep = 3;
 		}
-		return progressPercentage;
+		return progressStep;
 	};
 
-	const progressPercentage = calculateProgressPercentage(orderProgress);
+	const progressStep = calculateProgressStep(orderProgress);
+	const date = new Date(orderDate);
+	const monthNumber = date.getMonth();
+	const monthNames = [
+		"January",
+		"February",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"August",
+		"September",
+		"October",
+		"November",
+		"December",
+	];
+	const monthName = monthNames[monthNumber];
+	const expectedArrivalDate = `${monthName} ${date.getDate()}, ${date.getFullYear()}`;
 
 	return (
-		<div className="container mt-6" style={{ marginTop: "10px" }}>
-			<Card className="p-1">
-				<h2> Order Progress</h2>
-				<Row>
-					<Col>
-						<LinearProgress
-							variant="determinate"
-							value={progressPercentage}
-							style={{ height: "10px" }}
-						/>
-					</Col>
-				</Row>
-				<Card className="p-4" style={{ border: "none" }}>
-					<Row>
-						<Col>
-							<h5>Order Status:</h5>
-							<p>{orderProgress}</p>
-						</Col>
-						<Col>
-							<h5>Car Details:</h5>
-							<p>{carDetails}</p>
-						</Col>
-					</Row>
-					<Row>
-						<Col>
-							<h5>Store:</h5>
-							<p>{store}</p>
-						</Col>
-						<Col>
-							<h5>Store Address:</h5>
-							<p>{storeAddress}</p>
-						</Col>
-					</Row>
-					<Row>
-						<Col>
-							<h5>Estimated Delivery Time:</h5>
-							<p>{estimatedTime.toFixed(2)} mins</p>
-						</Col>
-					</Row>
-					<Row>
-						<Col>
-							<h5>Driver Name:</h5>
-							<p>{driverName}</p>
-						</Col>
-					</Row>
-				</Card>
-			</Card>
-		</div>
+		<section>
+			<div className="container h-20">
+				<div className="row d-flex justify-content-center align-items-center h-100">
+					<div className="col-12">
+						<div
+							className="card card-stepper text-black"
+							style={{ borderRadius: "1px", zIndex: "0" }}
+						>
+							<div className="card-body p-5">
+								<div className="d-flex justify-content-between align-items-center mb-5">
+									<div>
+										<h5 className="mb-0">
+											Order number{" "}
+											<span className="text-primary font-weight-bold">
+												#{orderNumber}
+											</span>
+										</h5>
+									</div>
+									<div className="text-end">
+										<p className="mb-0">
+											Expected Arrival: {expectedArrivalDate}
+										</p>
+									</div>
+								</div>
+								<LinearProgress
+									variant="determinate"
+									value={(progressStep / 3) * 100}
+									className="mt-5"
+								/>
+
+								<div className="d-flex justify-content-between">
+									<div className="d-lg-flex align-items-center">
+										<i className="fas fa-clipboard-list fa-3x me-lg-4 mb-3 mb-lg-0"></i>
+										<div>
+											<p className="fw-bold mb-1">Order</p>
+											<p className="fw-bold mb-0">Processed</p>
+										</div>
+									</div>
+									<div className="d-lg-flex align-items-center">
+										<i className="fas fa-box-open fa-3x me-lg-4 mb-3 mb-lg-0"></i>
+										<div>
+											<p className="fw-bold mb-1">Order</p>
+											<p className="fw-bold mb-0">Driver is enroute</p>
+										</div>
+									</div>
+									<div className="d-lg-flex align-items-center">
+										<i className="fas fa-shipping-fast fa-3x me-lg-4 mb-3 mb-lg-0"></i>
+										<div>
+											<p className="fw-bold mb-1">Order</p>
+											<p className="fw-bold mb-0">En Route</p>
+										</div>
+									</div>
+									<div className="d-lg-flex align-items-center">
+										<i className="fas fa-home fa-3x me-lg-4 mb-3 mb-lg-0"></i>
+										<div>
+											<p className="fw-bold mb-1">Order</p>
+											<p className="fw-bold mb-0">Arrived</p>
+										</div>
+									</div>
+								</div>
+
+								<div className="mt-5">
+									<div className="row">
+										<div className="col-lg-6">
+											<h5>Order Progress:</h5>
+											<p>{orderProgress}</p>
+											<h5>Car Details:</h5>
+											<p>{carDetails}</p>
+											<h5>Driver Name:</h5>
+											<p>{driverName}</p>
+										</div>
+										<div className="col-lg-6">
+											<h5>Store:</h5>
+											<p>{store}</p>
+											<h5>Store Address:</h5>
+											<p>{storeAddress}</p>
+											<h5>Estimated Time:</h5>
+											<p>{estimatedTime}</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
 	);
 };
+
 export default OrderProgress;

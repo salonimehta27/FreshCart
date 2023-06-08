@@ -5,13 +5,14 @@ import socket from "../../socket";
 import { useState, useEffect } from "react";
 import "./queries.css";
 import { NavLink } from "react-router-dom";
+import { setQueries } from "./querySlice";
 function CustomerQueryItem({
 	query,
 	queries,
-	setQueries,
 	currentRep,
 	showChatBox,
 	handleShowClick,
+	handleCurrentQuery,
 }) {
 	const dispatch = useDispatch();
 
@@ -39,16 +40,20 @@ function CustomerQueryItem({
 		})
 			.then((r) => r.json())
 			.then((data) => {
-				setQueries((prevQueries) => {
-					const updatedQueries = prevQueries.filter(
-						(q) => q.id !== data.query.id
-					);
-					return updatedQueries;
+				console.log(data);
+				dispatch(() => {
+					setQueries((prevQueries) => {
+						const updatedQueries = prevQueries.filter(
+							(q) => q.id !== data.query.id
+						);
+						return updatedQueries;
+					});
 				});
 				console.log(data);
 				dispatch(loadAdminChatMessages(data.messages));
 				//setChatMessages(data.messages);
 				handleShowClick(data.chat_id);
+				handleCurrentQuery(id);
 				// console.log(showChatBox);
 			});
 	}

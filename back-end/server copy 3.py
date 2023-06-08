@@ -16,7 +16,6 @@ from flask_caching import Cache
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
-from nltk import NaiveBayesClassifier
 import string
 import model
 
@@ -37,213 +36,6 @@ api_key = os.environ['API_KEY']
 stripe.api_key= os.environ['STRIPE_API_KEY']
 google_api_key = os.environ['GOOGLE_API_KEY']
 
-confidence_threshold = 0.1
-training_data = [
-    ('hi', 'Hello! How can I assist you today?'),
-    ('hello', 'Hello! How can I help you?'),
-    ('hey', 'Hi there! How may I assist you?'),
-    ('bye', 'Goodbye!'),
-    ('see you', 'Farewell! Have a great day!'),
-    ('thanks', 'You\'re welcome! If you have any more questions, feel free to ask.'),
-    ('thank you', 'You\'re welcome! If you have any more questions, feel free to ask.'),
-    ('how are you', 'I\'m an AI chatbot, so I don\'t have feelings, but thanks for asking! How can I assist you?'),
-    ('what is your name', 'I\'m an chatbot. You can call me ChatBot.'),
-    ('where are you located', 'I exist in the digital realm, so I don\'t have a physical location.'),
-    ('product', 'Sure, I can help you with that. What specific product are you looking for?'),
-    ('cancel my order', 'To assist you with the cancellation, would you like me to connect you with a representative?'),
-    ('order', 'How can I assist you with the order?'),
-    ('help', 'How can I assist you?'),
-    ('need assistance', "Sure, I'm here to help. What do you need?"),
-    ('tell me about shipping', 'Our shipping policy ensures that your products are delivered within the specified timeframe.'),
-    ('what are the payment options', 'We accept various payment methods including credit cards, debit cards.'),
-    ('how can I track my order', 'You can track your order by visiting the "Order Submition" page when you submit the order'),
-    ('do you have a return policy', 'Yes, we have a return policy. Please visit our website for more information on our return policy.'),
-    ('refund', 'If you would like to request a refund, please provide your order details and reason for the refund. Our customer support team will assist you further.'),
-    ('what items do you have', 'We have a wide range of items available. You can find the complete list of our products on our website.')
-
-]
-
-def preprocess_training_data(training_data):
-    processed_data = []
-    for user_input, response in training_data:
-        tokens = word_tokenize(user_input.lower())
-        stop_words = set(stopwords.words('english'))
-        tokens = [token for token in tokens if token not in stop_words and token not in string.punctuation]
-        processed_data.append((tokens, response))
-    return processed_data
-
-processed_training_data = preprocess_training_data(training_data)
-training_set = [(nltk.FreqDist(tokens), response) for tokens, response in processed_training_data]
-classifier = NaiveBayesClassifier.train(training_set)
-
-
-def preprocess_input(user_input):
-    tokens = word_tokenize(user_input.lower())
-    stop_words = set(stopwords.words('english'))
-    tokens = [token for token in tokens if token not in stop_words and token not in string.punctuation]
-    return tokens
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    print('Client disconnected')
-
-@socketio.on('user_message')
-def handle_user_message(data):
-    message = data['message']
-    # Generate chatbot response
-    preprocessed_input = preprocess_input(message)
-    tokens = nltk.FreqDist(preprocessed_input)
-    response = classifier.classify(tokens)
-    confidence = classifier.prob_classify(tokens).prob(response)
-
-    if response == "unknown" or confidence < confidence_threshold:
-        response = "I'm sorry, I didn't understand that. Could you please rephrase or provide more information?"
-    #import pdb; pdb.set_trace()
-    emit('chatbot_response', {'sender': 'Chatbot', 'message': response})
-
-#@socketio.on('accept_query')
-@app.route("/post_query/<customer_id>", methods=["POST"])
-def handle_accept_query(customer_id):
-    message = request.json['user_input']
-    if any(keyword in message.lower() for keyword in ["representative", "human", "yes", "person"]):
-        query = Query(customer_id=customer_id, customer_rep_id=None, message=message, is_accepted=False)
-        db.session.add(query)
-        db.session.commit()
-        chat = Chat(customer_id=customer_id, query_id=query.id)
-        db.session.add(chat)
-        db.session.commit()
-        #import pdb; pdb.set_trace()
-        if "chat_messages" in session:
-            for message in session["chat_messages"]:
-                if message['sender'] == 'User':
-                    chat_message = ChatMessage(message=message['message'], chat_id=chat.id, customer_id=customer_id)
-                    db.session.add(chat_message)
-                elif message['sender'] == 'Chatbot':
-                    chat_message = ChatMessage(message=message['message'], chat_id=chat.id)
-                    db.session.add(chat_message)
-            db.session.commit()
-            session["chat_messages"] = []
-            session["chat_id"] = chat.id
-        messages = []
-        chat_messages = ChatMessage.query.filter_by(chat_id=chat.id).all()
-
-        for message in chat_messages:
-            if message.customer_id is None and message.customer_rep_id is None:
-                messages.append({'sender': 'Chatbot', 'message': message.message})
-            elif message.customer_id:
-                messages.append({'sender': 'User', 'message': message.message})
-            elif message.customer_rep_id:
-                messages.append({'sender': 'Customer_rep', 'message': message.message})
-        response = {"sender":"Chatbot", "message":"I can connect you to a representative. Please wait a moment and don't refresh the page"}
-        socketio.emit("customer query", {"query" : query.to_dict()})
-        return jsonify({"chatId" : chat.id, "message": response})
-
-@app.route("/api/chat/<customer_id>", methods=["POST"])
-def chat(customer_id):
-    message = request.json['user_input']
-    # Generate chatbot response
-    preprocessed_input = preprocess_input(message)
-    tokens = nltk.FreqDist(preprocessed_input)
-    response = classifier.classify(tokens)
-    if 'chat_messages' not in session:
-        session['chat_messages'] = []
-    session['chat_messages'].append({'sender': 'User', 'message': message})
-    session['chat_messages'].append({'sender': 'Chatbot', 'message': response})
-    session.modified = True
-
-    return jsonify(session["chat_messages"])
-
-@socketio.on("customer_rep_message")
-def handle_customer_rep_message(data):
-                # Handle the message received from the customer representative
-    message = data.get("message")
-    chat_id = data.get("chat_id")
-
-                # Perform any necessary operations with the message (e.g., save to the database)
-    customer_rep_id = data.get("customer_rep_id")
-    customer_rep_message = ChatMessage(message=message, chat_id=chat_id, customer_rep_id=customer_rep_id)
-    db.session.add(customer_rep_message)
-    db.session.commit()
-
-                # Emit the message to the appropriate chat
-    emit("customer_rep_response", {"sender": "Customer_rep", "message": message, "roomId": chat_id}, broadcast = True)
-
-@socketio.on("customer_response")
-def handle_customer_response(data):
-    sender = "User"
-    message = data["message"]
-    roomId = data["roomId"]
-    customer_id = data["customerId"]
-
-    chat_message = ChatMessage(message=message, chat_id=roomId, customer_id = customer_id)
-    db.session.add(chat_message)
-    db.session.commit()
-    emit("customer_resp", {"sender": sender, "message": message, "roomId": roomId}, broadcast = True)
-
-
-@socketio.on("connect_customer_rep")
-def handle_connect_customer_rep():
-    # Handle the connection of a customer representative
-    # You can perform any necessary operations here
-    print("Customer representative connected")
-
-
-@app.route("/get_chat")
-@cross_origin(supports_credentials=True)
-def get_chat():
-    if 'chat_messages' in session and 'chat_id' not in session:
-        # If there are chat messages in the session and chat_id doesn't exist
-        
-        # Retrieve all session chat messages
-        messages = session['chat_messages']
-    elif 'chat_id' in session:
-        # If chat_id exists in the session
-        
-        # Retrieve chat messages from the chat with the specified chat_id
-        chat_id = session['chat_id']
-        chat = Chat.query.get(chat_id)
-        if chat:
-            chat_messages = ChatMessage.query.filter_by(chat_id = chat.id).all()
-            messages = []
-            for message in chat_messages:
-                if message.customer_id is None and message.customer_rep_id is None:
-                    messages.append({'sender': 'Chatbot', 'message': message.message})
-                elif message.customer_id:
-                    messages.append({'sender': 'User', 'message': message.message})
-                elif message.customer_rep_id:
-                    messages.append({'sender': 'Customer_rep', 'message': message.message})
-        else:
-            # Chat not found
-            messages = []
-    else:
-        # No chat messages found
-        messages = []
-    chat_id = session.get("chat_id", None)
-    return jsonify({"messages": messages, "chatId": chat_id})
-
-
-def get_chat_messages(query_id):
-    # Find the chat associated with the query ID
-    # import pdb; pdb.set_trace()
-    chat = Chat.query.filter_by(query_id=int(query_id)).first()
-
-    if not chat:
-        return jsonify({'error': 'Chat not found'})
-
-    # Retrieve all chat messages for the given chat
-    chat_messages = ChatMessage.query.filter_by(chat_id=chat.id).all()
-
-    # Prepare the response data
-    messages = []
-    for message in chat_messages:
-                if message.customer_id is None and message.customer_rep_id is None:
-                    messages.append({'sender': 'Chatbot', 'message': message.message})
-                elif message.customer_id:
-                    messages.append({'sender': 'User', 'message': message.message})
-                elif message.customer_rep_id:
-                    messages.append({'sender': 'Customer_rep', 'message': message.message})
-
-    return messages
 
 
 @app.route('/clear_session_cookie')
@@ -451,6 +243,184 @@ def get_directions(driver, walmart):
         "estimated_time": str(estimated_time),
         "directions": data
     }
+def preprocess_input(user_input):
+    tokens = word_tokenize(user_input.lower())
+    stop_words = set(stopwords.words('english'))
+    tokens = [token for token in tokens if token not in stop_words and token not in string.punctuation]
+    return tokens
+
+# Define responses
+def get_response(user_input):
+    if 'hi' in user_input:
+        return 'Hello! How can I assist you today?'
+    elif 'bye' in user_input:
+        return 'Goodbye!'
+    elif 'product' in user_input:
+        return 'Sure, I can help you with that. What specific product are you looking for?'
+    elif 'cancel' in user_input:
+        return "To assist you with the cancellation, would you like me to connect you with representative?"
+    elif 'order' in user_input or "help" in user_input:
+        return 'How can I assist you with the order?'
+    else:
+        return "I'm sorry, I am afraid I can't help you with that, would you like to speak to representative?"
+
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('Client disconnected')
+
+@socketio.on('user_message')
+def handle_user_message(data):
+    message = data['message']
+    # Generate chatbot response
+    preprocessed_input = preprocess_input(message)
+    response = get_response(preprocessed_input)
+    session.modified = True
+    #import pdb; pdb.set_trace()
+    emit('chatbot_response', {'sender': 'Chatbot', 'message': response})
+
+#@socketio.on('accept_query')
+@app.route("/post_query/<customer_id>", methods=["POST"])
+def handle_accept_query(customer_id):
+    message = request.json['user_input']
+    if "representative" in message.lower() or "human" in message.lower() or "yes":
+        query = Query(customer_id=customer_id, customer_rep_id=None, message=message, is_accepted=False)
+        db.session.add(query)
+        db.session.commit()
+        chat = Chat(customer_id=customer_id, query_id=query.id)
+        db.session.add(chat)
+        db.session.commit()
+        #import pdb; pdb.set_trace()
+        if "chat_messages" in session:
+            for message in session["chat_messages"]:
+                if message['sender'] == 'User':
+                    chat_message = ChatMessage(message=message['message'], chat_id=chat.id, customer_id=customer_id)
+                    db.session.add(chat_message)
+                elif message['sender'] == 'Chatbot':
+                    chat_message = ChatMessage(message=message['message'], chat_id=chat.id)
+                    db.session.add(chat_message)
+            db.session.commit()
+            session["chat_messages"] = []
+            session["chat_id"] = chat.id
+        messages = []
+        chat_messages = ChatMessage.query.filter_by(chat_id=chat.id).all()
+
+        for message in chat_messages:
+            if message.customer_id is None and message.customer_rep_id is None:
+                messages.append({'sender': 'Chatbot', 'message': message.message})
+            elif message.customer_id:
+                messages.append({'sender': 'User', 'message': message.message})
+            elif message.customer_rep_id:
+                messages.append({'sender': 'Customer_rep', 'message': message.message})
+        response = {"sender":"Chatbot", "message":"I can connect you to a representative. Please wait a moment and don't refresh the page"}
+        socketio.emit("customer query", {"query" : query.to_dict()})
+        return jsonify({"chatId" : chat.id, "message": response})
+
+@app.route("/api/chat/<customer_id>", methods=["POST"])
+def chat(customer_id):
+    message = request.json['user_input']
+    # Generate chatbot response
+    preprocessed_input = preprocess_input(message)
+    response = get_response(preprocessed_input)
+    if 'chat_messages' not in session:
+        session['chat_messages'] = []
+    session['chat_messages'].append({'sender': 'User', 'message': message})
+    session['chat_messages'].append({'sender': 'Chatbot', 'message': response})
+    session.modified = True
+
+    return jsonify(session["chat_messages"])
+
+@socketio.on("customer_rep_message")
+def handle_customer_rep_message(data):
+                # Handle the message received from the customer representative
+    message = data.get("message")
+    chat_id = data.get("chat_id")
+
+                # Perform any necessary operations with the message (e.g., save to the database)
+    customer_rep_id = data.get("customer_rep_id")
+    customer_rep_message = ChatMessage(message=message, chat_id=chat_id, customer_rep_id=customer_rep_id)
+    db.session.add(customer_rep_message)
+    db.session.commit()
+
+                # Emit the message to the appropriate chat
+    emit("customer_rep_response", {"sender": "Customer_rep", "message": message, "roomId": chat_id}, broadcast = True)
+
+@socketio.on("customer_response")
+def handle_customer_response(data):
+    sender = "User"
+    message = data["message"]
+    roomId = data["roomId"]
+    customer_id = data["customerId"]
+
+    chat_message = ChatMessage(message=message, chat_id=roomId, customer_id = customer_id)
+    db.session.add(chat_message)
+    db.session.commit()
+    emit("customer_resp", {"sender": sender, "message": message, "roomId": roomId}, broadcast = True)
+
+
+@socketio.on("connect_customer_rep")
+def handle_connect_customer_rep():
+    # Handle the connection of a customer representative
+    # You can perform any necessary operations here
+    print("Customer representative connected")
+
+
+@app.route("/get_chat")
+@cross_origin(supports_credentials=True)
+def get_chat():
+    if 'chat_messages' in session and 'chat_id' not in session:
+        # If there are chat messages in the session and chat_id doesn't exist
+        
+        # Retrieve all session chat messages
+        messages = session['chat_messages']
+    elif 'chat_id' in session:
+        # If chat_id exists in the session
+        
+        # Retrieve chat messages from the chat with the specified chat_id
+        chat_id = session['chat_id']
+        chat = Chat.query.get(chat_id)
+        if chat:
+            chat_messages = ChatMessage.query.filter_by(chat_id = chat.id).all()
+            messages = []
+            for message in chat_messages:
+                if message.customer_id is None and message.customer_rep_id is None:
+                    messages.append({'sender': 'Chatbot', 'message': message.message})
+                elif message.customer_id:
+                    messages.append({'sender': 'User', 'message': message.message})
+                elif message.customer_rep_id:
+                    messages.append({'sender': 'Customer_rep', 'message': message.message})
+        else:
+            # Chat not found
+            messages = []
+    else:
+        # No chat messages found
+        messages = []
+    chat_id = session.get("chat_id", None)
+    return jsonify({"messages": messages, "chatId": chat_id})
+
+
+def get_chat_messages(query_id):
+    # Find the chat associated with the query ID
+    # import pdb; pdb.set_trace()
+    chat = Chat.query.filter_by(query_id=int(query_id)).first()
+
+    if not chat:
+        return jsonify({'error': 'Chat not found'})
+
+    # Retrieve all chat messages for the given chat
+    chat_messages = ChatMessage.query.filter_by(chat_id=chat.id).all()
+
+    # Prepare the response data
+    messages = []
+    for message in chat_messages:
+                if message.customer_id is None and message.customer_rep_id is None:
+                    messages.append({'sender': 'Chatbot', 'message': message.message})
+                elif message.customer_id:
+                    messages.append({'sender': 'User', 'message': message.message})
+                elif message.customer_rep_id:
+                    messages.append({'sender': 'Customer_rep', 'message': message.message})
+
+    return messages
 
 #Chatbot route
 

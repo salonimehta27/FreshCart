@@ -38,7 +38,7 @@ const MapComponent = () => {
 	const [showMarker, setShowMarker] = useState(false);
 	const orderValue = localStorage.getItem("order");
 	const order = JSON.parse(orderValue);
-	//console.log(order);
+	console.log(order);
 	// console.log(order);
 	const dispatch = useDispatch();
 
@@ -277,29 +277,31 @@ const MapComponent = () => {
 						) {
 							clearInterval(customerTimer); // Stop the timer as the driver has reached the end of directionsToCustomer
 							clearInterval(timer); // Stop the timer completely as the driver has reached the customer
-							setReachedCustomer(true);
-
-							const data = {
-								order_id: order.id,
-								driver_id: driver.id,
-								address: address,
-							};
-							fetch("http://localhost:5000/update-order-status", {
-								method: "POST",
-								headers: {
-									"Content-Type": "application/json",
-								},
-								body: JSON.stringify(data),
-							})
-								.then((response) => response.json())
-								.then((data) => {
-									console.log(data.order);
-									localStorage.setItem("order", JSON.stringify(data.order));
-									dispatch(setOrder(data.order));
+							setTimeout(() => {
+								setReachedCustomer(true);
+								const data = {
+									order_id: order.id,
+									driver_id: driver.id,
+									address: address,
+								};
+								fetch("http://localhost:5000/update-order-status", {
+									method: "POST",
+									headers: {
+										"Content-Type": "application/json",
+									},
+									body: JSON.stringify(data),
 								})
-								.catch((error) => {
-									console.error(error);
-								});
+									.then((response) => response.json())
+									.then((data) => {
+										console.log(data.order);
+										localStorage.setItem("order", JSON.stringify(data.order));
+										dispatch(setOrder(data.order));
+									})
+									.catch((error) => {
+										console.error(error);
+									});
+							}, 500);
+
 							return;
 						}
 
@@ -400,146 +402,309 @@ const MapComponent = () => {
 			map.fitBounds(bounds);
 		}
 	};
+	const mapOptions = {
+		styles: [
+			{
+				featureType: "water",
+				elementType: "geometry",
+				stylers: [
+					{
+						color: "#a2daf2",
+					},
+				],
+			},
+			{
+				featureType: "landscape.man_made",
+				elementType: "geometry",
+				stylers: [
+					{
+						color: "#f7f1df",
+					},
+				],
+			},
+			{
+				featureType: "landscape.natural",
+				elementType: "geometry",
+				stylers: [
+					{
+						color: "#d0e3b4",
+					},
+				],
+			},
+			{
+				featureType: "landscape.natural.terrain",
+				elementType: "geometry",
+				stylers: [
+					{
+						visibility: "off",
+					},
+				],
+			},
+			{
+				featureType: "poi.park",
+				elementType: "geometry",
+				stylers: [
+					{
+						color: "#bde6ab",
+					},
+				],
+			},
+			// Additional styles
+			{
+				featureType: "road",
+				elementType: "geometry",
+				stylers: [
+					{
+						color: "#ffffff",
+					},
+				],
+			},
+			{
+				featureType: "road",
+				elementType: "labels.text.fill",
+				stylers: [
+					{
+						color: "#808080",
+					},
+				],
+			},
+			{
+				featureType: "road",
+				elementType: "labels.text.stroke",
+				stylers: [
+					{
+						color: "#ffffff",
+					},
+				],
+			},
+			{
+				featureType: "transit",
+				elementType: "geometry",
+				stylers: [
+					{
+						color: "#f2f2f2",
+					},
+				],
+			},
+			{
+				featureType: "transit.station",
+				elementType: "labels.text.fill",
+				stylers: [
+					{
+						color: "#ffffff",
+					},
+				],
+			},
+			{
+				featureType: "transit.station",
+				elementType: "labels.text.stroke",
+				stylers: [
+					{
+						color: "#ffffff",
+					},
+				],
+			},
+			{
+				featureType: "administrative",
+				elementType: "geometry",
+				stylers: [
+					{
+						visibility: "off",
+					},
+				],
+			},
+			{
+				featureType: "administrative.land_parcel",
+				elementType: "labels.text.fill",
+				stylers: [
+					{
+						color: "#bdbdbd",
+					},
+				],
+			},
+			{
+				featureType: "administrative.neighborhood",
+				elementType: "labels.text.fill",
+				stylers: [
+					{
+						color: "#808080",
+					},
+				],
+			},
+			{
+				featureType: "poi",
+				elementType: "labels.text.fill",
+				stylers: [
+					{
+						color: "#808080",
+					},
+				],
+			},
+			{
+				featureType: "poi",
+				elementType: "labels.text.stroke",
+				stylers: [
+					{
+						color: "#ffffff",
+					},
+				],
+			},
+			// Add more styles here based on your preferences
+		],
+	};
 
 	return (
-		<div className="container" style={{ height: "100vh", width: "100%" }}>
-			{!isLoaded ? (
-				<h1>Loading...</h1>
-			) : order.order_status !== "DELIVERED" ? (
-				<>
-					{order && order.order_status === null && (
-						<div style={{ textAlign: "center", marginTop: "20px" }}>
-							<h2>Your order was successful!</h2>
-							<p>
-								We have connected you with the nearest driver. They will contact
-								you shortly to confirm your delivery details.
-							</p>
-						</div>
-					)}
-					<div
-						style={{
-							display: "flex",
-							justifyContent: "center",
-							alignItems: "center",
-							height: "45vh",
-						}}
-					>
-						<GoogleMap
-							mapContainerStyle={{ width: "80%", height: "100%" }}
-							onLoad={onLoad}
-							options={{ padding: "10px" }}
+		<>
+			<div
+				className="container"
+				style={{
+					height: "100vh",
+					width: "100%",
+					border: "1px solid #ccc",
+					marginTop: "10px",
+					boxShadow: "0 0 5px rgba(0, 0, 0, 0.3)",
+				}}
+			>
+				{!isLoaded ? (
+					<h1>Loading...</h1>
+				) : order.order_status !== "DELIVERED" ? (
+					<>
+						{order && order.order_status === null && (
+							<div style={{ textAlign: "center", marginTop: "20px" }}>
+								<h2>Your order was successful!</h2>
+								<p>
+									We have connected you with the nearest driver. They will
+									contact you shortly to confirm your delivery details.
+								</p>
+							</div>
+						)}
+						<div
+							style={{
+								display: "flex",
+								justifyContent: "center",
+								alignItems: "center",
+								height: "45vh",
+							}}
 						>
-							{showMarker && customerLoc && (
-								<>
-									<Marker
-										position={{
-											lat: parseFloat(customerLoc.lat),
-											lng: parseFloat(customerLoc.lng),
-										}}
-										icon={{
-											url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-												renderToString(<FaUser color="red" size={40} />)
-											)}`,
-											scaledSize: new window.google.maps.Size(40, 40),
-										}}
-									/>
+							<GoogleMap
+								mapContainerStyle={{ width: "80%", height: "100%" }}
+								onLoad={onLoad}
+								options={mapOptions}
+							>
+								{showMarker && customerLoc && (
+									<>
+										<Marker
+											position={{
+												lat: parseFloat(customerLoc.lat),
+												lng: parseFloat(customerLoc.lng),
+											}}
+											icon={{
+												url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+													renderToString(<FaUser color="red" size={40} />)
+												)}`,
+												scaledSize: new window.google.maps.Size(40, 40),
+											}}
+										/>
 
-									<Marker
-										position={{
-											lat: parseFloat(driver.location.latitude),
-											lng: parseFloat(driver.location.longitude),
-										}}
-										icon={{
-											url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-												renderToString(<FaCar color="blue" size={40} />)
-											)}`,
-											scaledSize: new window.google.maps.Size(40, 40),
-										}}
-									/>
-									<Marker
-										position={{
-											lat: parseFloat(walmartLocation.latitude),
-											lng: parseFloat(walmartLocation.longitude),
-										}}
-										icon={{
-											url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-												renderToString(
-													<FaShoppingCart color="green" size={40} />
-												)
-											)}`,
-											scaledSize: new window.google.maps.Size(40, 40),
-										}}
-									/>
-								</>
-							)}
+										<Marker
+											position={{
+												lat: parseFloat(driver.location.latitude),
+												lng: parseFloat(driver.location.longitude),
+											}}
+											icon={{
+												url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+													renderToString(<FaCar color="blue" size={40} />)
+												)}`,
+												scaledSize: new window.google.maps.Size(40, 40),
+											}}
+										/>
+										<Marker
+											position={{
+												lat: parseFloat(walmartLocation.latitude),
+												lng: parseFloat(walmartLocation.longitude),
+											}}
+											icon={{
+												url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+													renderToString(
+														<FaShoppingCart color="green" size={40} />
+													)
+												)}`,
+												scaledSize: new window.google.maps.Size(40, 40),
+											}}
+										/>
+									</>
+								)}
 
-							{order &&
-								order.order_status === null &&
-								directionsToWalmartService}
-							{order &&
-								order.order_status === null &&
-								directionsToCustomerService}
-							{/* {console.log("walmart", directionsToWalmart)}
+								{order &&
+									order.order_status === null &&
+									directionsToWalmartService}
+								{order &&
+									order.order_status === null &&
+									directionsToCustomerService}
+								{/* {console.log("walmart", directionsToWalmart)}
 						{console.log("customer", directionsToCustomer)} */}
-							{order && order.order_status === null && directionsToWalmart && (
-								<DirectionsRenderer
-									options={{
-										directions: directionsToWalmart,
-										suppressMarkers: true,
-										polylineOptions: {
-											strokeColor: "blue",
-											strokeWeight: 4,
-										},
-									}}
+								{order && order.order_status === null && directionsToWalmart && (
+									<DirectionsRenderer
+										options={{
+											directions: directionsToWalmart,
+											suppressMarkers: true,
+											polylineOptions: {
+												strokeColor: "blue",
+												strokeWeight: 4,
+											},
+										}}
+									/>
+								)}
+								{order && order.order_status === null && directionsToCustomer && (
+									<DirectionsRenderer
+										options={{
+											directions: directionsToCustomer,
+											suppressMarkers: true,
+											polylineOptions: {
+												strokeColor: "red",
+												strokeWeight: 4,
+											},
+										}}
+									/>
+								)}
+							</GoogleMap>
+						</div>
+					</>
+				) : (
+					<div className="card border-0 text-center">
+						<div className="card-body">
+							<>
+								<h3>Your order has been delivered!!</h3>
+								<img
+									src={delivered}
+									alt="delivered"
+									className="mx-auto d-block"
 								/>
-							)}
-							{order && order.order_status === null && directionsToCustomer && (
-								<DirectionsRenderer
-									options={{
-										directions: directionsToCustomer,
-										suppressMarkers: true,
-										polylineOptions: {
-											strokeColor: "red",
-											strokeWeight: 4,
-										},
-									}}
-								/>
-							)}
-						</GoogleMap>
+							</>
+						</div>
 					</div>
-				</>
-			) : (
-				<div className="card border-0 text-center">
-					<div className="card-body">
-						<>
-							<h3>Your order has been delivered!!</h3>
-							<img
-								src={delivered}
-								alt="delivered"
-								className="mx-auto d-block"
-							/>
-						</>
-					</div>
-				</div>
-			)}
-			{driver && walmartLocation && (
-				<OrderProgress
-					orderProgress={
-						(order && order.order_status === "DELIVERED") ||
-						(reachedWalmart && reachedCustomer)
-							? "Delivered"
-							: reachedWalmart
-							? "Driver has picked the grocery and is on their way"
-							: "Driver is on their way to pick groceries"
-					}
-					carDetails={`${driver.car_model}, ${driver.license_plate}`}
-					store={`${walmartLocation.name}`}
-					storeAddress={`${walmartLocation.address}`}
-					estimatedTime={totalEstimatedTime}
-					driverName={driver.name}
-				/>
-			)}
-		</div>
+				)}
+				{driver && walmartLocation && (
+					<OrderProgress
+						orderProgress={
+							(order && order.order_status === "DELIVERED") ||
+							(reachedWalmart && reachedCustomer)
+								? "Delivered"
+								: reachedWalmart
+								? "Driver has picked the grocery and is on their way"
+								: "Driver is on their way to pick groceries"
+						}
+						orderNumber={order && order.id}
+						orderDate={order && order.created_at}
+						carDetails={`${driver.car_model}, ${driver.license_plate}`}
+						store={`${walmartLocation.name}`}
+						storeAddress={`${walmartLocation.address}`}
+						estimatedTime={`${totalEstimatedTime.toFixed(2)} mins`}
+						driverName={driver.name}
+					/>
+				)}
+			</div>
+		</>
 	);
 };
 

@@ -37,7 +37,6 @@ api_key = os.environ['API_KEY']
 stripe.api_key= os.environ['STRIPE_API_KEY']
 google_api_key = os.environ['GOOGLE_API_KEY']
 
-confidence_threshold = 0.1
 training_data = [
     ('hi', 'Hello! How can I assist you today?'),
     ('hello', 'Hello! How can I help you?'),
@@ -50,7 +49,7 @@ training_data = [
     ('what is your name', 'I\'m an chatbot. You can call me ChatBot.'),
     ('where are you located', 'I exist in the digital realm, so I don\'t have a physical location.'),
     ('product', 'Sure, I can help you with that. What specific product are you looking for?'),
-    ('cancel my order', 'To assist you with the cancellation, would you like me to connect you with a representative?'),
+    ('cancel', 'To assist you with the cancellation, would you like me to connect you with a representative?'),
     ('order', 'How can I assist you with the order?'),
     ('help', 'How can I assist you?'),
     ('need assistance', "Sure, I'm here to help. What do you need?"),
@@ -58,9 +57,6 @@ training_data = [
     ('what are the payment options', 'We accept various payment methods including credit cards, debit cards.'),
     ('how can I track my order', 'You can track your order by visiting the "Order Submition" page when you submit the order'),
     ('do you have a return policy', 'Yes, we have a return policy. Please visit our website for more information on our return policy.'),
-    ('refund', 'If you would like to request a refund, please provide your order details and reason for the refund. Our customer support team will assist you further.'),
-    ('what items do you have', 'We have a wide range of items available. You can find the complete list of our products on our website.')
-
 ]
 
 def preprocess_training_data(training_data):
@@ -94,10 +90,6 @@ def handle_user_message(data):
     preprocessed_input = preprocess_input(message)
     tokens = nltk.FreqDist(preprocessed_input)
     response = classifier.classify(tokens)
-    confidence = classifier.prob_classify(tokens).prob(response)
-
-    if response == "unknown" or confidence < confidence_threshold:
-        response = "I'm sorry, I didn't understand that. Could you please rephrase or provide more information?"
     #import pdb; pdb.set_trace()
     emit('chatbot_response', {'sender': 'Chatbot', 'message': response})
 
@@ -143,8 +135,7 @@ def chat(customer_id):
     message = request.json['user_input']
     # Generate chatbot response
     preprocessed_input = preprocess_input(message)
-    tokens = nltk.FreqDist(preprocessed_input)
-    response = classifier.classify(tokens)
+    response = get_response(preprocessed_input)
     if 'chat_messages' not in session:
         session['chat_messages'] = []
     session['chat_messages'].append({'sender': 'User', 'message': message})
