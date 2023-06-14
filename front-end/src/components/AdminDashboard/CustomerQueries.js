@@ -7,6 +7,7 @@ import { addQuery, setQueries } from "./querySlice";
 import "./queries.css";
 import { useSelector, useDispatch } from "react-redux";
 import { Modal } from "react-bootstrap";
+import empty from "../CustomerSide/images/empty.jpg";
 
 function CustomerQueries() {
 	const queries = useSelector((state) => state.query);
@@ -74,7 +75,7 @@ function CustomerQueries() {
 	// console.log(currentrep);
 	return (
 		<div>
-			<h2 style={{ textAlign: "center" }}>Customer Queries</h2>
+			<h2 style={{ textAlign: "center", marginTop: "20px" }}>Tickets</h2>
 
 			{queries && queries.length > 0 ? (
 				queries.map((query) => (
@@ -90,7 +91,23 @@ function CustomerQueries() {
 					/>
 				))
 			) : (
-				<>{/* <h4>No queries at the moment</h4> */}</>
+				<>
+					<div className="container">
+						<div class="alert alert-primary" role="alert">
+							No tickets at the moment
+						</div>
+						{/* <h4 style={{ textAlign: "center", marginTop: "30px" }}>
+							No tickets at the moment
+						</h4> */}
+
+						<img
+							src={empty}
+							className="fluid"
+							style={{ maxWidth: "100%", height: "auto" }}
+							alt="empty"
+						></img>
+					</div>
+				</>
 			)}
 			{showModal && (
 				<Modal

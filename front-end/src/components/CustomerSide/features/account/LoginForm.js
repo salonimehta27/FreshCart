@@ -5,8 +5,8 @@ import { currentUserAdded } from "./loginSlice";
 import { Container, Form, Button } from "react-bootstrap";
 import banner6 from "../../images/banner6.png";
 function LoginForm() {
-	const [email, setEmail] = useState("test1@test.com");
-	const [password, setPassword] = useState("test");
+	const [email, setEmail] = useState("salonimehta2127@gmail.com");
+	const [password, setPassword] = useState("hackbright");
 	const currentUser = useSelector((state) => state.currentUser.entities);
 	const dispatch = useDispatch();
 	const navigate = useNavigate();

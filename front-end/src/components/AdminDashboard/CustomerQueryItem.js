@@ -16,15 +16,7 @@ function CustomerQueryItem({
 }) {
 	const dispatch = useDispatch();
 
-	// useEffect(() => {
-	// 	// Initialize the Socket.IO client connection
-
-	// 	return () => {
-	// 		// Clean up the socket connection when the component unmounts
-	// 		socket.disconnect();
-	// 	};
-	// }, []);
-	console.log(query);
+	// console.log(query);
 	function handleClick(id) {
 		// console.log(currentRep);
 		fetch(`http://localhost:5000/accept-query/${id}`, {
@@ -40,7 +32,7 @@ function CustomerQueryItem({
 		})
 			.then((r) => r.json())
 			.then((data) => {
-				console.log(data);
+				// console.log(data);
 				dispatch(() => {
 					setQueries((prevQueries) => {
 						const updatedQueries = prevQueries.filter(
@@ -49,7 +41,7 @@ function CustomerQueryItem({
 						return updatedQueries;
 					});
 				});
-				console.log(data);
+				// console.log(data);
 				dispatch(loadAdminChatMessages(data.messages));
 				//setChatMessages(data.messages);
 				handleShowClick(data.chat_id);

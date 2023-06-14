@@ -56,7 +56,11 @@ function CustomNavbar({ currentUser, setShopNow, shopNow }) {
 	};
 
 	return (
-		<Navbar variant="dark" expand="lg" style={{ backgroundColor: "#0B614A" }}>
+		<Navbar
+			variant="dark"
+			expand="lg"
+			style={{ backgroundColor: "#0B614A", height: "80px" }}
+		>
 			<Container>
 				<Navbar.Brand style={{ color: "white" }} href="/">
 					<img

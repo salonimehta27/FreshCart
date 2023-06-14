@@ -217,7 +217,7 @@ function Cart() {
 											<Modal
 												show={showModal}
 												onHide={handleCloseModal}
-												style={{ marginTop: "150px" }}
+												style={{ marginTop: "100px" }}
 											>
 												<Modal.Header closeButton>
 													<Modal.Title>Checkout</Modal.Title>

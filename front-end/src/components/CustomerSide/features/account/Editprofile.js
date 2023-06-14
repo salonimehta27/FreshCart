@@ -39,87 +39,92 @@ function Editprofile(currentUser) {
 	}
 
 	return (
-		<Row className="justify-content-md-center">
-			<Col xs sm="7">
-				<Form>
-					<Form.Group>
-						<Form.Label>
-							FirstName:
+		<div className="container" style={{ marginTop: "30px" }}>
+			<Row className="justify-content-md-center">
+				<Col xs sm="7">
+					<Form>
+						<Form.Group>
+							<Form.Label>
+								FirstName:
+								<Form.Control
+									type="text"
+									className="form-control"
+									name="first_name"
+									rows={3}
+									placeholder={currentUser.currentUser.fname}
+									disabled
+								/>
+							</Form.Label>
+						</Form.Group>
+						<Form.Group>
+							<Form.Label>
+								LastName
+								<Form.Control
+									type="text"
+									className="form-control"
+									name="last_name"
+									rows={3}
+									placeholder={currentUser.currentUser.lname}
+									disabled
+								/>
+							</Form.Label>
+						</Form.Group>
+						<Form.Group>
+							<Form.Label>Email</Form.Label>
 							<Form.Control
 								type="text"
-								className="form-control"
-								name="first_name"
+								name="description"
+								placeholder={currentUser.currentUser.email}
 								rows={3}
-								placeholder={currentUser.currentUser.fname}
 								disabled
 							/>
-						</Form.Label>
-					</Form.Group>
-					<Form.Group>
-						<Form.Label>
-							LastName
-							<Form.Control
-								type="text"
-								className="form-control"
-								name="last_name"
-								rows={3}
-								placeholder={currentUser.currentUser.lname}
-								disabled
-							/>
-						</Form.Label>
-					</Form.Group>
-					<Form.Group>
-						<Form.Label>Email</Form.Label>
-						<Form.Control
-							type="text"
-							name="description"
-							placeholder={currentUser.currentUser.email}
-							rows={3}
-							disabled
-						/>
-					</Form.Group>
+						</Form.Group>
 
-					<Form.Group>
+						<Form.Group>
+							<>
+								<Form.Label>Username</Form.Label>
+								<FormControl
+									type="text"
+									name="username"
+									value={username.username}
+									onChange={handleChange}
+									aria-label="Amount (to the nearest dollar)"
+								/>
+							</>
+							<Button
+								variant="secondary"
+								onClick={() => handleUpdate(username)}
+							>
+								Change Username
+							</Button>
+						</Form.Group>
 						<>
-							<Form.Label>Username</Form.Label>
-							<FormControl
-								type="text"
-								name="username"
-								value={username.username}
-								onChange={handleChange}
-								aria-label="Amount (to the nearest dollar)"
-							/>
+							<Form.Group>
+								<Form.Label>New Password</Form.Label>
+								<Form.Control
+									type="password"
+									name="password"
+									onChange={handleChange}
+									value={password.password}
+								/>
+							</Form.Group>
+							<Form.Group>
+								<Form.Label>Confirm Password</Form.Label>
+								<Form.Control
+									type="password"
+									name="password_confirmation"
+									value={password.password_confirmation}
+									onChange={handleChange}
+								/>
+							</Form.Group>
 						</>
-						<Button variant="secondary" onClick={() => handleUpdate(username)}>
-							Change Username
+						<Button variant="secondary" onClick={() => handleUpdate(password)}>
+							Change Password
 						</Button>
-					</Form.Group>
-					<>
-						<Form.Group>
-							<Form.Label>New Password</Form.Label>
-							<Form.Control
-								type="password"
-								name="password"
-								onChange={handleChange}
-								value={password.password}
-							/>
-						</Form.Group>
-						<Form.Group>
-							<Form.Label>Confirm Password</Form.Label>
-							<Form.Control
-								type="password"
-								name="password_confirmation"
-								value={password.password_confirmation}
-								onChange={handleChange}
-							/>
-						</Form.Group>
-					</>
-					<Button variant="secondary" onClick={() => handleUpdate(password)}>
-						Change Password
-					</Button>
-				</Form>
-			</Col>
-		</Row>
+					</Form>
+				</Col>
+			</Row>
+		</div>
 	);
 }
 

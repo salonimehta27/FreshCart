@@ -13,12 +13,6 @@ function PaymentForm({ cartItems }) {
 	const [clientSecret, setClientSecret] = useState("");
 	const dispatch = useDispatch();
 	const [address, setAddress] = useState(null);
-	//const cartItems = useSelector((state) => state.carts.items);
-	const location = useLocation();
-	// const cartItems = JSON.parse(
-	// 	decodeURIComponent(new URLSearchParams(location.search).get("cartItems"))
-	// );
-	//console.log(cartItems);
 	useEffect(() => {
 		// Create PaymentIntent as soon as the page loads
 		fetch("http://localhost:5000/create-payment-intent", {

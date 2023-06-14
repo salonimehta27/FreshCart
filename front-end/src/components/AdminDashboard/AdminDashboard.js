@@ -21,9 +21,7 @@ function AdminDashboard({ current_rep }) {
 	}
 
 	return (
-		<>
-			<p>hello</p>
-		</>
+		<>{/* <p>hello</p> */}</>
 		// <Router>
 
 		// 	<Routes>

@@ -60,13 +60,13 @@ const Home = () => {
 			</Card>
 
 			<CardGroup className="custom-card-group">
-				<Card className="custom-card">
+				<Card className="custom-card" style={{ height: "520px" }}>
 					<Card.Body>
 						<Card.Title className="custom-card-title">
 							Choose what you want
 						</Card.Title>
 						<Card.Text className="cards">
-							Select items from your favorite grocery stores at freshcart.com .
+							Get items from your favorite grocery stores at freshcart.com .
 						</Card.Text>
 					</Card.Body>
 					<Card.Img variant="top" src={choice} className="custom-card-image" />

@@ -59,7 +59,8 @@ training_data = [
     ('how can I track my order', 'You can track your order by visiting the "Order Submition" page when you submit the order'),
     ('do you have a return policy', 'Yes, we have a return policy. Please visit our website for more information on our return policy.'),
     ('refund', 'If you would like to request a refund, please provide your order details and reason for the refund. Our customer support team will assist you further.'),
-    ('what items do you have', 'We have a wide range of items available. You can find the complete list of our products on our website.')
+    ('what items do you have', 'We have a wide range of items available. You can find the complete list of our products on our website.'),
+    ('my item came damaged', "I apologize for the inconvenience. We're sorry to hear that your item arrived damaged. Would you like to speak to a representative to assist you with this issue?")
 
 ]
 
@@ -336,6 +337,8 @@ def find_nearest_driver(customer_id, customer_lat, customer_lng):
 
 def find_nearest_walmart(customer_lat, customer_lng):
     walmart_locations = get_stores()
+    print(walmart_locations)
+    # import pdb; pdb.set_trace()
     shortest_distance = None
     nearest_walmart = None
 
@@ -822,6 +825,7 @@ def create_payment():
         })
     except Exception as e:
         return jsonify(error=str(e)), 403
+
 
 
 

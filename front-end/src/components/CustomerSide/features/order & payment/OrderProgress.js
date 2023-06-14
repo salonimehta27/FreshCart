@@ -123,8 +123,8 @@ const OrderProgress = ({
 											<p>{store}</p>
 											<h5>Store Address:</h5>
 											<p>{storeAddress}</p>
-											<h5>Estimated Time:</h5>
-											<p>{estimatedTime}</p>
+											{/* <h5>Estimated Time:</h5>
+											<p>{estimatedTime}</p> */}
 										</div>
 									</div>
 								</div>

@@ -37,21 +37,23 @@ function Chatbox({ chatId, currentrep }) {
 
 	function handleSendMessage(id) {
 		// Send the message via WebSocket
-		const newMessage = {
-			sender: "Customer_rep",
-			message: messageInput,
-			customer_rep_id: id,
-			chat_id: chatId,
-		};
+		if (messageInput !== "") {
+			const newMessage = {
+				sender: "Customer_rep",
+				message: messageInput,
+				customer_rep_id: id,
+				chat_id: chatId,
+			};
 
-		dispatch(
-			addAdminChatMessage({ sender: "Customer_rep", message: messageInput })
-		);
-		if (socket) {
-			socket.emit("customer_rep_message", newMessage);
+			dispatch(
+				addAdminChatMessage({ sender: "Customer_rep", message: messageInput })
+			);
+			if (socket) {
+				socket.emit("customer_rep_message", newMessage);
+			}
+
+			setMessageInput(""); // Clear the message input field
 		}
-
-		setMessageInput(""); // Clear the message input field
 	}
 
 	return (

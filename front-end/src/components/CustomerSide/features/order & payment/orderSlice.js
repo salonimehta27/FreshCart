@@ -5,6 +5,7 @@ const orderSlice = createSlice({
 	initialState: {
 		currentOrder: null,
 		allOrders: [],
+		clientSecret: null,
 	},
 	reducers: {
 		setOrder: (state, action) => {
@@ -13,8 +14,12 @@ const orderSlice = createSlice({
 		setAllOrders: (state, action) => {
 			state.allOrders = action.payload;
 		},
+		storeClientSecret: (state, action) => {
+			state.clientSecret = action.payload;
+		},
 	},
 });
 
-export const { setOrder, clearOrder, setAllOrders } = orderSlice.actions;
+export const { setOrder, clearOrder, setAllOrders, storeClientSecret } =
+	orderSlice.actions;
 export default orderSlice.reducer;

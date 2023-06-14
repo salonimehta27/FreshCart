@@ -1,11 +1,10 @@
-# <img src="">
-
-[![Build Status]()]()
+# <img src="front-end/src/components/CustomerSide/images/image1.png">
 
 Summary
 
 ## Table of Contents🐛
 
+- [Demo](https://youtu.be/5FRoU_AbYI0)
 - [Tech Stack](#tech-stack)
 - [Features](#features)
 - [Setup/Installation](#installation)
@@ -20,31 +19,32 @@ Summary
 
 ## <a name="features"></a>Features 📽
 
-Search for plants by name, water, sun, temperature, or humidity needs. User account registration not required.
-
-![Guest Cart](add_path_to_image)
+![Guest Cart](front-end/src/components/CustomerSide/images/image2.png)
 <br/><br/><br/>
 People can Browse the website as a guest, add items to cart
 
-![User Cart](add_path_to_image)
+![User Cart](front-end/src/components/CustomerSide/images/image3.png)
 <br/><br/><br/>
 In order to checkout, user has to create an account, which then will move items from guest cart to user cart
 
-![Stripe Checkout](add_path_to_image)
+![Stripe Checkout](front-end/src/components/CustomerSide/images/image4.png)
 <br/><br/><br/>
 Checkout payment will be handled by Stripe Payment intent
 
-![Google Maps Tracking](add_path_to_image)
+![Google Maps Tracking](front-end/src/components/CustomerSide/images/image5.png)
 <br/><br/><br/>
 Customer will be connected to the nearest driver to them, that will deliver the groceries to them, live updates will happen using websockets
 
-![Order History](add_path_to_image)
-<br/><br/><br/>
-user can see their previous orders
-
-![Customer Support Chatbot](add_path_to_image)
+![Customer Support Chatbot](front-end/src/components/CustomerSide/images/image7.png)
+![Customer Support Chatbot](front-end/src/components/CustomerSide/images/image8.png)
+![Customer Support Chatbot](front-end/src/components/CustomerSide/images/image9.png)
+![Customer Support Chatbot](front-end/src/components/CustomerSide/images/image10.png)
 <br/><br/><br/>
 Can interact with the chatbot or speak to representative as well, real time communication will happen using websockets
+
+![Order History](front-end/src/components/CustomerSide/images/image12.png)
+<br/><br/><br/>
+user can see their previous orders
 
 ## <a name="installation"></a>Setup/Installation ⌨️
 
@@ -111,7 +111,3 @@ If you want to use SQLAlchemy to query the database, run in interactive mode
 ```
 $ python -i model.py
 ```
-
-## <a name="future"></a>TODO✨
-
-- Add online status for AdminDashboard, to see all drivers online

@@ -48,10 +48,10 @@ const OrdersListPage = ({ orders }) => {
 		return null;
 	};
 	return (
-		<div className="container mt-4">
+		<div className="container mt-5">
 			<div className="row">
-				<div className="col-md-4">
-					<h1>Orders List</h1>
+				<div className="col-md-3">
+					<h1>Orders History</h1>
 					{orders ? (
 						<ul className="list-group">
 							{orders.map((order) => (
