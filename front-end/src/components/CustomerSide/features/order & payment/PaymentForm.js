@@ -3,15 +3,9 @@ import CheckoutForm from "./CheckoutForm";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import AddressForm from "./AddressForm";
-import { useSelector, useDispatch } from "react-redux";
-import { cartItemsAdded } from "./cartsSlice";
-import { useLocation } from "react-router-dom";
 function PaymentForm({ cartItems }) {
-	// console.log(process.env);
-	// console.log(process.env.REACT_APP_STRIPE_API_KEY);
 	const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_API_KEY);
 	const [clientSecret, setClientSecret] = useState("");
-	const dispatch = useDispatch();
 	const [address, setAddress] = useState(null);
 	useEffect(() => {
 		// Create PaymentIntent as soon as the page loads

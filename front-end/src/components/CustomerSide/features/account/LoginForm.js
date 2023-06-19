@@ -34,7 +34,6 @@ function LoginForm() {
 			}
 		});
 	};
-	// console.log(currentUser);
 
 	return (
 		<section

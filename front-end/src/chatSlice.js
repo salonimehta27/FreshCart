@@ -12,7 +12,6 @@ const chatSlice = createSlice({
 		},
 
 		addChatMessage: (state, action) => {
-			console.log("yes");
 			state.messages.push(action.payload);
 		},
 		setChatId(state, action) {

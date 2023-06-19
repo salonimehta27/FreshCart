@@ -23,7 +23,6 @@ import { setChatId } from "./components/AdminDashboard/adminChatSlice";
 import { setAllOrders } from "./components/CustomerSide/features/order & payment/orderSlice";
 import OrdersListPage from "./components/CustomerSide/features/order & payment/OrdersListPage";
 import "./App.css";
-import Footer from "./components/CustomerSide/Footer";
 import Editprofile from "./components/CustomerSide/features/account/Editprofile";
 
 function App() {
@@ -62,7 +61,6 @@ function App() {
 	}, []);
 
 	const isOnAdminRoute = window.location.pathname.startsWith("/admin");
-	//console.log(currentrep);
 
 	return (
 		<Router>
@@ -93,7 +91,6 @@ function App() {
 					<Route path="/admin-queries" element={<CustomerQueries />} />
 					<Route path="/all-products" element={<Product />} />
 					<Route path="/orders" element={<OrdersListPage orders={orders} />} />
-					{/* <Route path="/customer-help" element={<Chatbot />} /> */}
 					{currentUser !== null && (
 						<Route
 							path="/edit-profile"
@@ -104,9 +101,6 @@ function App() {
 				{currentUser !== null &&
 					currentUser !== undefined &&
 					!currentUser.error && <Chatbot />}
-
-				{/* {currentrep !== null && currentrep !== undefined && <AdminChatbot />} */}
-				{/* <Footer /> */}
 			</div>
 		</Router>
 	);

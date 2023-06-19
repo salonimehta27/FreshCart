@@ -1,6 +1,5 @@
 import React from "react";
 import LinearProgress from "@material-ui/core/LinearProgress";
-import { Card, Row, Col } from "react-bootstrap";
 
 const OrderProgress = ({
 	orderProgress,
@@ -123,8 +122,6 @@ const OrderProgress = ({
 											<p>{store}</p>
 											<h5>Store Address:</h5>
 											<p>{storeAddress}</p>
-											{/* <h5>Estimated Time:</h5>
-											<p>{estimatedTime}</p> */}
 										</div>
 									</div>
 								</div>

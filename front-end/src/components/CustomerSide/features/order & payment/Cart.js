@@ -6,7 +6,6 @@ import {
 	cartItemsUpdated,
 	cartItemsCleared,
 } from "./cartsSlice";
-import { Link } from "react-router-dom";
 import "./Cart.css";
 import { FaTrashAlt } from "react-icons/fa";
 import visa from "../../images/visa.png";
@@ -19,7 +18,6 @@ function Cart() {
 	const dispatch = useDispatch();
 	const cartItems = useSelector((state) => state.carts.items);
 	const currentUser = useSelector((state) => state.currentUser.entities);
-	const [checkoutVisible, setCheckoutVisible] = useState(false);
 	const [showModal, setShowModal] = useState(false);
 
 	const handleOpenModal = () => {
@@ -197,16 +195,6 @@ function Cart() {
 										Total price: ${totalPrice ? totalPrice.toFixed(2) : "0.00"}
 									</p>
 									{currentUser && !currentUser.error ? (
-										// <button
-										// 	onClick={() => {
-										// 		window.location.href = `/payment?cartItems=${encodeURIComponent(
-										// 			JSON.stringify(cartItems)
-										// 		)}`;
-										// 	}}
-										// 	className="btn btn-primary"
-										// >
-										// 	Go to Checkout
-										// </button>
 										<>
 											<button
 												onClick={handleOpenModal}

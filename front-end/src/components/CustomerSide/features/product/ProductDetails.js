@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
-// import "./ProductDetails.css"; // Import your custom CSS file for styling
-import Container from "react-bootstrap/Container";
 import Image from "react-bootstrap/Image";
-import { Card, Row, Col, Button } from "react-bootstrap";
-import { useSelector, useDispatch } from "react-redux";
+import { Row, Col, Button } from "react-bootstrap";
+import { useDispatch } from "react-redux";
 import { cartItemsAdded } from "../order & payment/cartsSlice";
 function ProductDetails() {
 	const [product, setProduct] = useState(null);

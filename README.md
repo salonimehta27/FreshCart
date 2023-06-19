@@ -2,6 +2,8 @@
 
 Summary
 
+Fresh Cart is an online grocery shopping and delivery platform that revolutionizes the shopping experience. Built using Python, Flask, React, and Redux, it offers a user-friendly interface. The platform also incorporates real-time order tracking via the Google Maps API and Socket.io, secure payment processing through the Stripe API, an intelligent virtual assistant powered by NLTK for efficient issue resolution, and seamless customer service interaction facilitated by WebSockets. With these advancements, Fresh Cart ensures a seamless shopping experience, reliable delivery, and exceptional customer support.
+
 ## Table of Contents🐛
 
 - [Demo](https://youtu.be/5FRoU_AbYI0)

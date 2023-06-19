@@ -14,7 +14,6 @@ const cartsSlice = createSlice({
 			const index = state.items.cart_products.findIndex(
 				(item) => item.product_id === action.payload
 			);
-			// may be needs to be items.cart_products
 			state.items.cart_products.splice(index, 1);
 		},
 		cartItemsUpdated(state, action) {

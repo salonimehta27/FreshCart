@@ -15,11 +15,8 @@ const Chatbot = () => {
 	const chat_id = useSelector((state) => state.chat.chatId);
 	const chatLogRef = useRef(null);
 	const dispatch = useDispatch();
-	// console.log(roomId)
 	useEffect(() => {
 		socket.on("customer_rep_response", (data) => {
-			// console.log(data);
-			// console.log(roomId);
 			const currentChatId = roomId;
 			if (data.sender === "Customer_rep" && data.roomId === currentChatId) {
 				dispatch(addChatMessage(data));
@@ -117,7 +114,6 @@ const Chatbot = () => {
 					})
 						.then((response) => response.json())
 						.then((data) => {
-							console.log(data);
 							// dispatch(loadChatMessages(data.chat_messages));
 							// dispatch(setChatId(data.chat_id));
 						})
@@ -172,7 +168,7 @@ const Chatbot = () => {
 							className="input-field"
 							onKeyDown={(e) => {
 								if (e.key === "Enter") {
-									e.preventDefault(); // Prevents the default Enter key behavior
+									e.preventDefault();
 									sendMessage();
 								}
 							}}

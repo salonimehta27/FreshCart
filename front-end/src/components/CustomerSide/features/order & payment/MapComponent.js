@@ -38,8 +38,6 @@ const MapComponent = () => {
 	const [showMarker, setShowMarker] = useState(false);
 	const orderValue = localStorage.getItem("order");
 	const order = JSON.parse(orderValue);
-	console.log(order);
-	// console.log(order);
 	const dispatch = useDispatch();
 
 	const { isLoaded } = useLoadScript({
@@ -293,7 +291,6 @@ const MapComponent = () => {
 								})
 									.then((response) => response.json())
 									.then((data) => {
-										console.log(data.order);
 										localStorage.setItem("order", JSON.stringify(data.order));
 										dispatch(setOrder(data.order));
 									})
@@ -388,10 +385,6 @@ const MapComponent = () => {
 		}
 		return null;
 	}, [walmartLocation, customerLoc]);
-	// console.log(showMarker);
-	// console.log(customerLoc);
-	// console.log(walmartLocation);
-	console.log(directionsToWalmart);
 
 	const onLoad = (map) => {
 		const bounds = new google.maps.LatLngBounds();
@@ -549,7 +542,6 @@ const MapComponent = () => {
 					},
 				],
 			},
-			// Add more styles here based on your preferences
 		],
 	};
 
@@ -641,8 +633,6 @@ const MapComponent = () => {
 								{order &&
 									order.order_status === null &&
 									directionsToCustomerService}
-								{/* {console.log("walmart", directionsToWalmart)}
-						{console.log("customer", directionsToCustomer)} */}
 								{order && order.order_status === null && directionsToWalmart && (
 									<DirectionsRenderer
 										options={{

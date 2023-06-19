@@ -1,27 +1,24 @@
 import React from "react";
 import { useState } from "react";
-import { Link, useNavigate, NavLink } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { productFiltered } from "../product/productsSlice";
-import { currentUserAdded, currentUserRemoved } from "../account/loginSlice";
+import { currentUserRemoved } from "../account/loginSlice";
 import Navbar from "react-bootstrap/Navbar";
 import Badge from "@material-ui/core/Badge";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import NavDropdown from "react-bootstrap/NavDropdown";
-import { Form, InputGroup } from "react-bootstrap";
-import Button from "react-bootstrap/Button";
+import { Form } from "react-bootstrap";
 import ShoppingCartIcon from "@material-ui/icons/ShoppingCart";
 import { FaUser, FaClipboardList, FaSignOutAlt } from "react-icons/fa";
-import { FaSearch } from "react-icons/fa";
 import "./navbar.css";
-import grocery from "../../images/grocery.png";
 import { useLocation } from "react-router-dom";
 import logo3 from "../../images/logo3.png";
 import { MdOutlineManageAccounts } from "react-icons/md";
 import { clearChat } from "../../../../chatSlice";
 
-function CustomNavbar({ currentUser, setShopNow, shopNow }) {
+function CustomNavbar({ currentUser }) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [categoryFilter, setCategoryFilter] = useState("all");
 	const dispatch = useDispatch();
